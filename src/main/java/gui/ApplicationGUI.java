@@ -10,19 +10,20 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import primitivos.PontoGr;
+import model.graphic.GraphicPoint;
 
-public class PontoComMouseGui  {
-    int indicePonto=1;
+public class ApplicationGUI {
+    private final String title = "Bora Desenhar";
+    private int indicePonto = 1;
 
-    public PontoComMouseGui(Stage palco) {
+    public ApplicationGUI(Stage stage) {
 
         // define titulo da janela
-        palco.setTitle("Testa Mouse");
+        stage.setTitle(title);
 
         // define largura e altura da janela
-        palco.setWidth(500);
-        palco.setHeight(500);
+        stage.setWidth(500);
+        stage.setHeight(500);
 
         // Painel para os componentes
         BorderPane pane = new BorderPane();
@@ -38,7 +39,7 @@ public class PontoComMouseGui  {
         // Eventos de mouse
         // trata mouseMoved
         canvas.setOnMouseMoved(event -> {
-            palco.setTitle("Testa Mouse (Pressione botao do Mouse):"+" (" + (int)event.getX() + ", " + (int)event.getY() + ")");
+            stage.setTitle(title + " (" + (int)event.getX() + ", " + (int)event.getY() + ")");
         });
 
         // trata mousePressed
@@ -49,13 +50,13 @@ public class PontoComMouseGui  {
                 x = (int)event.getX();
                 y = (int)event.getY();
                 // desenha ponto na posicao clicada
-                desenharPonto(gc, x, y, 8, "P"+indicePonto, Color.BLUE);
+                drawPoint(gc, x, y, 8, "P" + indicePonto, Color.AZURE);
                 indicePonto++;
             } else if (event.getButton() == MouseButton.SECONDARY) {
                 x = (int)event.getX();
                 y = (int)event.getY();
                 // desenha ponto na posicao clicada
-                desenharPonto(gc, x, y, 8, "("+ x + ", " + y +")", Color.RED);
+                drawPoint(gc, x, y, 8, "("+ x + ", " + y +")", Color.LIGHTSALMON);
             }
         });
 
@@ -65,8 +66,8 @@ public class PontoComMouseGui  {
 
         // cria e insere cena
         Scene scene = new Scene(pane);
-        palco.setScene(scene);
-        palco.show();
+        stage.setScene(scene);
+        stage.show();
     }
 
     /**
@@ -79,13 +80,12 @@ public class PontoComMouseGui  {
      * @param nome nome do ponto
      * @param cor cor do ponto
      */
-    public void desenharPonto(GraphicsContext g, int x, int y, int diametro, String nome, Color cor) {
-        PontoGr p;
-
+    public void drawPoint(GraphicsContext g, int x, int y, int diametro, String nome, Color cor) {
+        GraphicPoint p;
         // Cria um ponto
-        p = new PontoGr(x, y, cor, nome, diametro);
+        p = new GraphicPoint(x, y, cor, diametro, nome);
 
         // Desenha o ponto
-        p.desenharPonto(g);
+        p.drawPoint(g);
     }
 }
