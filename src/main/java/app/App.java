@@ -9,7 +9,7 @@ import javafx.stage.Stage;
  * @version v1.0 2018/05/05
  */
 
-public class Aplicacao extends Application{
+public class App extends Application{
     public static void main (String args[]) {
         launch(args);
     }
