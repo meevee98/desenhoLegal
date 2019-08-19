@@ -1,8 +1,8 @@
 package model.graphic
 
-import model.math.Point
 import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
+import model.math.Point
 
 class GraphicPoint : Point {
     //TODO: change javafx to TornadoFX
@@ -26,6 +26,8 @@ class GraphicPoint : Point {
         name?.also { this.name = it }
         diameter?.also { this.diameter = it.toDouble() }
     }
+
+    constructor(point: Point) : super(point)
 
     // endregion
 

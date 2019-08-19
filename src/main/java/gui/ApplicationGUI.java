@@ -1,20 +1,22 @@
 package gui;
+
+import controller.Click;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import model.enums.BasicForm;
 import model.graphic.GraphicPoint;
 
 public class ApplicationGUI {
+    // TODO: Guardar as constantes em outro lugar
     private final String title = "Bora Desenhar";
-    private int indicePonto = 1;
+    private BasicForm formaAtual = BasicForm.POINT;
 
     public ApplicationGUI(Stage stage) {
 
@@ -22,14 +24,20 @@ public class ApplicationGUI {
         stage.setTitle(title);
 
         // define largura e altura da janela
-        stage.setWidth(500);
-        stage.setHeight(500);
+        // sem definir, é ajustado conforme o tamanho dos componentes
+//        stage.setWidth(500);
+//        stage.setHeight(500);
 
         // Painel para os componentes
         BorderPane pane = new BorderPane();
 
+        // componente para os botões
+        HBox buttons = new HBox(5);
+        includeButtons(buttons);
+
         // componente para desenho
         Canvas canvas = new Canvas(500, 500);
+
 
         // componente para desenhar graficos
 
@@ -39,7 +47,7 @@ public class ApplicationGUI {
         // Eventos de mouse
         // trata mouseMoved
         canvas.setOnMouseMoved(event -> {
-            stage.setTitle(title + " (" + (int)event.getX() + ", " + (int)event.getY() + ")");
+            stage.setTitle(title + " (" + (int)event.getX() + ", " + (int)event.getY() + ")" );
         });
 
         // trata mousePressed
@@ -49,19 +57,21 @@ public class ApplicationGUI {
             if (event.getButton() == MouseButton.PRIMARY) {
                 x = (int)event.getX();
                 y = (int)event.getY();
-                // desenha ponto na posicao clicada
-                drawPoint(gc, x, y, 8, "P" + indicePonto, Color.AZURE);
-                indicePonto++;
+
+                // desenha ponto na posicao clicada com nome padrão
+                Click.Handler.drawForm(gc, formaAtual, x, y, 4, Color.CADETBLUE, null);
             } else if (event.getButton() == MouseButton.SECONDARY) {
                 x = (int)event.getX();
                 y = (int)event.getY();
-                // desenha ponto na posicao clicada
-                drawPoint(gc, x, y, 8, "("+ x + ", " + y +")", Color.LIGHTSALMON);
+
+                // desenha ponto na posicao clicada com as coordenadas
+                Click.Handler.drawForm(gc, formaAtual, x, y, 4, Color.LIGHTSALMON, "("+ x + ", " + y +")");
             }
         });
 
         // atributos do painel
-        pane.setBackground(new Background(new BackgroundFill(Color.AZURE, CornerRadii.EMPTY, Insets.EMPTY)));
+        pane.setBackground(new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY)));
+        pane.setTop(buttons);
         pane.setCenter(canvas); // posiciona o componente de desenho
 
         // cria e insere cena
@@ -69,6 +79,20 @@ public class ApplicationGUI {
         stage.setScene(scene);
         stage.show();
     }
+
+    private void includeButtons(HBox buttons) {
+        Button point = new Button("Ponto");
+        point.setOnAction(click -> formaAtual = BasicForm.POINT);
+
+        Button line = new Button("Reta");
+        line.setOnAction(click -> formaAtual = BasicForm.LINE);
+
+        Button circle = new Button("Círculo");
+        circle.setOnAction(click -> formaAtual = BasicForm.CIRCLE);
+
+        buttons.getChildren().addAll(point, line, circle);
+    }
+
 
     /**
      * Desenha um ponto grafico
