@@ -22,4 +22,11 @@ class CircleTest : AppTest() {
 
         assertEquals(expected, perimeter)
     }
+
+    @Test
+    fun testCalculateY() {
+        val y = Circle.calculateY(1.0, 1.0)
+
+        assertEquals(0.0, y)
+    }
 }

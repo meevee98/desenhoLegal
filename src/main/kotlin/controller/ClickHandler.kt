@@ -72,25 +72,7 @@ class Click {
 
         // TODO : Avaliar o nome desse método
         private fun formatName(form: BasicForm, name: String?): String {
-            if (name != null) {
-                return name
-            }
-
-            return when (form) {
-                BasicForm.POINT -> {
-                    pointIndex++
-                    "P$pointIndex"
-                }
-                BasicForm.LINE -> {
-                    lineIndex++
-                    "R$lineIndex"
-                }
-                BasicForm.CIRCLE -> {
-                    circleIndex++
-                    "C$circleIndex"
-                }
-                else -> ""
-            }
+            return name ?: ""
         }
 
     }
