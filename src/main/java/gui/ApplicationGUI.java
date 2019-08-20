@@ -50,6 +50,8 @@ public class ApplicationGUI {
             stage.setTitle(title + " (" + (int)event.getX() + ", " + (int)event.getY() + ")" );
         });
 
+        canvas.setOnMouseExited(event -> stage.setTitle(title));
+
         // trata mousePressed
         canvas.setOnMousePressed(event -> {
             int x, y;

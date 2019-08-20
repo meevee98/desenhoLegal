@@ -1,5 +1,5 @@
 package model.enums
 
 enum class CircleAlgorithm{
-    DEFAULT, POLAR, MIDPOINT, GRAPHICS
+    DEFAULT, POLAR, MIDPOINT, GRAPHICS, BRESENHAM
 }

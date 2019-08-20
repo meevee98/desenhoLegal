@@ -1,7 +1,6 @@
 package model.math
 
-import kotlin.math.PI
-import kotlin.math.pow
+import kotlin.math.*
 
 /**
  * Representa um circulo com ponto no centro e seu raio.
@@ -47,6 +46,32 @@ open class Circle {
      */
     fun calculatePerimeter(): Double {
         return 2 * PI * radius
+    }
+
+    companion object {
+        /**
+         * Method calculateX
+         *
+         * @param degree
+         * @param radius
+         *
+         * @return Retorna o valor x em um circulo de centro (0,0), raio = radius e grau = degree
+         */
+        fun calculateX (degree : Double, radius : Double): Double {
+            return sin(degree) * radius
+        }
+
+        /**
+         * Method calculateY
+         *
+         * @param x
+         * @param radius
+         *
+         * @return Retorna o valor y em um circulo de centro (0,0) // x^2 + y^2 = r^2
+         */
+        fun calculateY (x : Double, radius : Double): Double {
+            return sqrt(radius.pow(2) - x.pow(2))
+        }
     }
 
     // endregion

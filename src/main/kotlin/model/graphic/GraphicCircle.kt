@@ -4,6 +4,7 @@ import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
 import model.enums.CircleAlgorithm
 import model.math.Circle
+import java.lang.Math.PI
 
 class GraphicCircle : Circle {
     //TODO: change javafx to TornadoFX
@@ -71,7 +72,22 @@ class GraphicCircle : Circle {
     // region DRAW CIRCLE ALGORITHMS
 
     private fun drawCircleDefault(g: GraphicsContext) {
-        // TODO
+        val x1 = calculateX(PI / 4, radius).toInt() // 45º
+
+        for (x in 0..x1) {
+            val y = calculateY(x.toDouble(), radius)
+
+            GraphicPoint(center.x + x, center.y + y, color, width).drawPoint(g)
+            GraphicPoint(center.x + y, center.y + x, color, width).drawPoint(g)
+            GraphicPoint(center.x + x, center.y - y, color, width).drawPoint(g)
+            GraphicPoint(center.x + y, center.y - x, color, width).drawPoint(g)
+            GraphicPoint(center.x - x, center.y + y, color, width).drawPoint(g)
+            GraphicPoint(center.x - y, center.y + x, color, width).drawPoint(g)
+            GraphicPoint(center.x - x, center.y - y, color, width).drawPoint(g)
+            GraphicPoint(center.x - y, center.y - x, color, width).drawPoint(g)
+        }
+
+
     }
 
     private fun drawCirclePolar(g: GraphicsContext) {
