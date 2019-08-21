@@ -24,20 +24,18 @@ public class ApplicationGUI {
         stage.setTitle(title);
 
         // define largura e altura da janela
-        // sem definir, é ajustado conforme o tamanho dos componentes
-//        stage.setWidth(500);
-//        stage.setHeight(500);
+        stage.setWidth(500);
+        stage.setHeight(500);
 
         // Painel para os componentes
-        BorderPane pane = new BorderPane();
+        VBox pane = new VBox();
 
         // componente para os botões
         HBox buttons = new HBox(5);
         includeButtons(buttons);
 
         // componente para desenho
-        Canvas canvas = new Canvas(500, 500);
-
+        Canvas canvas = new Canvas();
 
         // componente para desenhar graficos
 
@@ -73,13 +71,21 @@ public class ApplicationGUI {
 
         // atributos do painel
         pane.setBackground(new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY)));
-        pane.setTop(buttons);
-        pane.setCenter(canvas); // posiciona o componente de desenho
+        pane.getChildren().addAll(buttons, canvas); // posiciona o componente de desenho
+        letResizeCanvas(pane, canvas);
 
         // cria e insere cena
         Scene scene = new Scene(pane);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void letResizeCanvas(Pane pane, Canvas canvas) {
+        // Conecta o tamanho do canvas ao tamanho do painel
+        canvas.widthProperty().bind(
+                pane.widthProperty());
+        canvas.heightProperty().bind(
+                pane.heightProperty());
     }
 
     private void includeButtons(HBox buttons) {
