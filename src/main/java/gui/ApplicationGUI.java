@@ -30,10 +30,6 @@ public class ApplicationGUI {
         // Painel para os componentes
         VBox pane = new VBox();
 
-        // componente para os botões
-        HBox buttons = new HBox(5);
-        includeButtons(buttons);
-
         // componente para desenho
         Canvas canvas = new Canvas();
 
@@ -41,6 +37,10 @@ public class ApplicationGUI {
 
         GraphicsContext gc;
         gc = canvas.getGraphicsContext2D();
+
+        // componente para os botões
+        HBox buttons = new HBox(5);
+        includeButtons(buttons, gc);
 
         // Eventos de mouse
         // trata mouseMoved
@@ -88,7 +88,7 @@ public class ApplicationGUI {
                 pane.heightProperty());
     }
 
-    private void includeButtons(HBox buttons) {
+    private void includeButtons(HBox buttons, GraphicsContext gc) {
         Button point = new Button("Ponto");
         point.setOnAction(click -> formaAtual = BasicForm.POINT);
 
@@ -98,7 +98,12 @@ public class ApplicationGUI {
         Button circle = new Button("Círculo");
         circle.setOnAction(click -> formaAtual = BasicForm.CIRCLE);
 
-        buttons.getChildren().addAll(point, line, circle);
+        Button limpar = new Button("Limpar");
+        limpar.setOnAction(click->{
+            gc.clearRect(0,0,10000,10000);
+        });
+
+        buttons.getChildren().addAll(point, line, circle,limpar);
     }
 
 
