@@ -1,6 +1,8 @@
 package gui;
 
 import controller.Click;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -18,8 +20,18 @@ public class ApplicationGUI {
     private final String title = "Bora Desenhar";
     private BasicForm formaAtual = BasicForm.POINT;
 
-    public ApplicationGUI(Stage stage) {
+    private DoubleProperty canvasWidth;
+    private DoubleProperty canvasHeight;
+    private DoubleProperty diffHeight;
 
+    private void iniciateObservables() {
+        canvasWidth = new SimpleDoubleProperty(0.0);
+        canvasHeight = new SimpleDoubleProperty(0.0);
+        diffHeight = new SimpleDoubleProperty(0.0);
+    }
+
+    public ApplicationGUI(Stage stage) {
+        iniciateObservables();
         // define titulo da janela
         stage.setTitle(title);
 
@@ -41,6 +53,7 @@ public class ApplicationGUI {
         // componente para os botões
         HBox buttons = new HBox(5);
         includeButtons(buttons, gc);
+        diffHeight.bind(buttons.heightProperty());
 
         // Eventos de mouse
         // trata mouseMoved
@@ -81,11 +94,15 @@ public class ApplicationGUI {
     }
 
     private void letResizeCanvas(Pane pane, Canvas canvas) {
+        // inicializa variaveis observables
+        canvas.widthProperty().bindBidirectional(canvasWidth);
+        canvas.heightProperty().bindBidirectional(canvasHeight);
+
         // Conecta o tamanho do canvas ao tamanho do painel
         canvas.widthProperty().bind(
                 pane.widthProperty());
         canvas.heightProperty().bind(
-                pane.heightProperty());
+                pane.heightProperty().subtract(diffHeight));
     }
 
     private void includeButtons(HBox buttons, GraphicsContext gc) {
@@ -100,7 +117,7 @@ public class ApplicationGUI {
 
         Button limpar = new Button("Limpar");
         limpar.setOnAction(click->{
-            gc.clearRect(0,0,10000,10000);
+            gc.clearRect(0, 0, canvasWidth.get(), canvasHeight.get());
         });
 
         buttons.getChildren().addAll(point, line, circle,limpar);
