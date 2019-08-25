@@ -6,8 +6,9 @@ import model.enums.BasicForm
 import model.graphic.GraphicCircle
 import model.graphic.GraphicLine
 import model.graphic.GraphicPoint
+import model.graphic.form.LineForm
 
-class Click {
+class Draw {
 
     companion object Handler {
         private var pointIndex = 0
@@ -60,6 +61,16 @@ class Click {
                 }
                 else -> return
             }
+        }
+
+        fun drawLineForm(g: GraphicsContext, x: Double, y: Double, divisions: Int, diameter: Int, color: Color?) {
+            LineForm(x.toInt(), y.toInt(), diameter, color)
+                    .drawForm(g, divisions)
+        }
+
+        fun reset() {
+            firstPoint = null
+            firstColor = Color.WHITE
         }
 
         private fun drawPoint(g: GraphicsContext, x: Int, y: Int, diameter: Int, name: String?, color: Color?) {
