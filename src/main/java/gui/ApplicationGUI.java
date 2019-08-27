@@ -3,11 +3,13 @@ package gui;
 import controller.Draw;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
@@ -20,8 +22,11 @@ public class ApplicationGUI {
     // TODO: Guardar as constantes em outro lugar
     private final String title = "Bora Desenhar";
     private BasicForm formaAtual = BasicForm.POINT;
-    private int drawDiameter = 1;
+    private int drawDiameter = 4;
     private int panePadding = 10;
+
+    private Color primaryColor = Color.BLACK;
+    private Color secondaryColor = Color.WHITE;
 
     private DoubleProperty canvasWidth;
     private DoubleProperty canvasHeight;
@@ -75,13 +80,13 @@ public class ApplicationGUI {
                 y = (int)event.getY();
 
                 // desenha ponto na posicao clicada com nome padrão
-                Draw.Handler.drawForm(gc, formaAtual, x, y, drawDiameter, Color.CADETBLUE, null);
+                Draw.Handler.drawForm(gc, formaAtual, x, y, drawDiameter, primaryColor, null);
             } else if (event.getButton() == MouseButton.SECONDARY) {
                 x = (int)event.getX();
                 y = (int)event.getY();
 
                 // desenha ponto na posicao clicada com as coordenadas
-                Draw.Handler.drawForm(gc, formaAtual, x, y, drawDiameter, Color.LIGHTSALMON, "("+ x + ", " + y +")");
+                Draw.Handler.drawForm(gc, formaAtual, x, y, drawDiameter, secondaryColor, null);
             }
         });
 
@@ -137,7 +142,19 @@ public class ApplicationGUI {
         Button limpar = new Button("Limpar");
         limpar.setOnAction(click -> clean(gc) );
 
-        buttons.getChildren().addAll(point, line, circle, drawForm, limpar);
+        VBox colors = new VBox(5);
+        // primary color choice
+        ColorPicker primaryColorPicker = new ColorPicker(primaryColor);
+        primaryColorPicker.setOnAction(t -> primaryColor = primaryColorPicker.getValue());
+
+        // secondary color choice
+        ColorPicker secondaryColorPicker = new ColorPicker(secondaryColor);
+        secondaryColorPicker.setOnAction(t -> secondaryColor = secondaryColorPicker.getValue());
+
+        colors.getChildren().addAll(primaryColorPicker, secondaryColorPicker);
+        colors.setMinHeight(60);
+
+        buttons.getChildren().addAll(point, line, circle, drawForm, limpar, colors);
     }
 
     private void clean(GraphicsContext gc) {
@@ -154,10 +171,11 @@ public class ApplicationGUI {
 
         drawFormDialog.showAndWait()
                 .filter(div -> {
-                    if (div.matches("\\d+")) {
-                        return Integer.valueOf(div) > 0;
+                    try {
+                        return Integer.parseInt(div) > 0;
+                    } catch (Exception e) {
+                        return false;
                     }
-                    else return false;
                 })
                 .ifPresent(div -> {
                     clean(gc);
@@ -165,29 +183,10 @@ public class ApplicationGUI {
                             gc,
                             canvasWidth.get(),
                             canvasHeight.get(),
-                            Integer.valueOf(div),
-                            drawDiameter,
-                            Color.BLACK);
+                            Integer.parseInt(div),
+                            1,
+                            primaryColor);
                 });
     }
 
-
-    /**
-     * Desenha um ponto grafico
-     *
-     * @param g contexto grafico
-     * @param x posicao x
-     * @param y posicao y
-     * @param diametro diametro do ponto
-     * @param nome nome do ponto
-     * @param cor cor do ponto
-     */
-    public void drawPoint(GraphicsContext g, int x, int y, int diametro, String nome, Color cor) {
-        GraphicPoint p;
-        // Cria um ponto
-        p = new GraphicPoint(x, y, cor, diametro, nome);
-
-        // Desenha o ponto
-        p.drawPoint(g);
-    }
 }
