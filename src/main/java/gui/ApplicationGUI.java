@@ -144,17 +144,15 @@ public class ApplicationGUI {
 
         VBox colors = new VBox(5);
         // primary color choice
-        ColorPicker primaryColorPicker = new ColorPicker();
-        primaryColorPicker.setValue(primaryColor);
-        primaryColorPicker
+        ColorPicker primaryColorPicker = new ColorPicker(primaryColor);
         primaryColorPicker.setOnAction(t -> primaryColor = primaryColorPicker.getValue());
 
         // secondary color choice
-        ColorPicker secondaryColorPicker = new ColorPicker();
-        secondaryColorPicker.setValue(secondaryColor);
+        ColorPicker secondaryColorPicker = new ColorPicker(secondaryColor);
         secondaryColorPicker.setOnAction(t -> secondaryColor = secondaryColorPicker.getValue());
 
         colors.getChildren().addAll(primaryColorPicker, secondaryColorPicker);
+        colors.setMinHeight(60);
 
         buttons.getChildren().addAll(point, line, circle, drawForm, limpar, colors);
     }
@@ -173,10 +171,11 @@ public class ApplicationGUI {
 
         drawFormDialog.showAndWait()
                 .filter(div -> {
-                    if (div.matches("\\d+")) {
+                    try {
                         return Integer.parseInt(div) > 0;
+                    } catch (Exception e) {
+                        return false;
                     }
-                    else return false;
                 })
                 .ifPresent(div -> {
                     clean(gc);
