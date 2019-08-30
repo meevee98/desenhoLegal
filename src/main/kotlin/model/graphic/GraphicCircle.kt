@@ -1,12 +1,13 @@
 package model.graphic
 
+import javafx.scene.paint.Color
+import javafx.scene.canvas.GraphicsContext
 import model.enums.CircleAlgorithm
 import model.math.Circle
-import java.awt.Color
-import java.awt.Graphics
+import java.lang.Math.PI
 
 class GraphicCircle : Circle {
-    //TODO: change java.awt to TornadoFX
+    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
     var width = 1
@@ -33,12 +34,12 @@ class GraphicCircle : Circle {
 
     companion object {
         fun draw(
-            g: Graphics,
+            g: GraphicsContext,
             xC: Int, yC: Int,
             radius: Double,
-            color: Color,
-            name: String,
             width: Int,
+            color: Color? = null,
+            name: String? = null,
             algorithm: CircleAlgorithm = CircleAlgorithm.DEFAULT
         ) {
             val circle = GraphicCircle(xC, yC, radius, width, color, name)
@@ -47,37 +48,57 @@ class GraphicCircle : Circle {
 
 
         fun draw(
-            g: Graphics,
-            xC: Double,yC: Double,
+            g: GraphicsContext,
+            xC: Double, yC: Double,
             radius: Double,
-            color: Color,
-            name: String,
             width: Int,
+            color: Color? = null,
+            name: String? = null,
             algorithm: CircleAlgorithm = CircleAlgorithm.DEFAULT
         ) {
-            draw(g, xC.toInt(), yC.toInt(), radius, color, name, width, algorithm)
+            draw(g, xC.toInt(), yC.toInt(), radius, width, color, name, algorithm)
         }
     }
 
-    fun drawCircle(g: Graphics, algorithm: CircleAlgorithm = CircleAlgorithm.DEFAULT) {
+    fun drawCircle(g: GraphicsContext, algorithm: CircleAlgorithm = CircleAlgorithm.DEFAULT) {
         when (algorithm) {
+            CircleAlgorithm.DEFAULT -> drawCircleDefault(g)
             CircleAlgorithm.POLAR -> drawCirclePolar(g)
             CircleAlgorithm.MIDPOINT -> drawCircleMidPoint(g)
-            else -> drawCircleGraphics(g)
+            else -> drawCircleGraphicsContext(g)
         }
     }
 
     // region DRAW CIRCLE ALGORITHMS
 
-    private fun drawCirclePolar(g: Graphics) {
+    private fun drawCircleDefault(g: GraphicsContext) {
+        val x1 = calculateX(PI / 4, radius).toInt() // 45º
+
+        for (x in 0..x1) {
+            val y = calculateY(x.toDouble(), radius)
+
+            GraphicPoint(center.x + x, center.y + y, color, width).drawPoint(g)
+            GraphicPoint(center.x + y, center.y + x, color, width).drawPoint(g)
+            GraphicPoint(center.x + x, center.y - y, color, width).drawPoint(g)
+            GraphicPoint(center.x + y, center.y - x, color, width).drawPoint(g)
+            GraphicPoint(center.x - x, center.y + y, color, width).drawPoint(g)
+            GraphicPoint(center.x - y, center.y + x, color, width).drawPoint(g)
+            GraphicPoint(center.x - x, center.y - y, color, width).drawPoint(g)
+            GraphicPoint(center.x - y, center.y - x, color, width).drawPoint(g)
+        }
+
+
+    }
+
+    private fun drawCirclePolar(g: GraphicsContext) {
         // TODO
     }
 
-    private fun drawCircleMidPoint(g: Graphics) {
+    private fun drawCircleMidPoint(g: GraphicsContext) {
         // TODO
     }
 
-    private fun drawCircleGraphics(g: Graphics) {
+    private fun drawCircleGraphicsContext(g: GraphicsContext) {
         // TODO
     }
 

@@ -51,6 +51,33 @@ open class Line {
         return p1.y - calculateSlope() * p1.x
     }
 
+    companion object {
+        /**
+         * Method calculateX
+         *
+         * @param y
+         * @param b
+         * @param m
+         *
+         * @return Retorna o valor de x //      x = ( y - b ) / m
+         */
+        fun calculateX (y : Double, b : Double, m : Double): Double {
+            return (y - b) / m
+        }
+
+        /**
+         * Method calculateX
+         *
+         * @param x
+         * @param b
+         * @param m
+         *
+         * @return Retorna o valor de y //      y = m * x + b
+         */
+        fun calculateY (x : Double, b : Double, m : Double): Double {
+            return m * x + b
+        }
+    }
     // endregion
 
     override fun toString(): String {

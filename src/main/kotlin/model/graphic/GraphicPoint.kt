@@ -1,15 +1,15 @@
 package model.graphic
 
+import javafx.scene.paint.Color
+import javafx.scene.canvas.GraphicsContext
 import model.math.Point
-import java.awt.Color
-import java.awt.Graphics
 
 class GraphicPoint : Point {
-    //TODO: change java.awt to TornadoFX
+    //TODO: change javafx to TornadoFX
     var pointColor: Color = Color.BLACK
     var nameColor: Color = Color.BLACK
     var name = ""
-    var diameter = 1
+    var diameter = 1.0
 
     // region CONSTRUCTORS
 
@@ -24,8 +24,10 @@ class GraphicPoint : Point {
             this.nameColor = it
         }
         name?.also { this.name = it }
-        diameter?.also { this.diameter = it }
+        diameter?.also { this.diameter = it.toDouble() }
     }
+
+    constructor(point: Point) : super(point)
 
     // endregion
 
@@ -36,12 +38,12 @@ class GraphicPoint : Point {
      *
      * @param g contexto grafico
      */
-    fun drawPoint(g: Graphics) {
-        g.color = pointColor
-        g.fillOval(x.toInt() - diameter/2, y.toInt() - diameter/2, diameter, diameter)
+    fun drawPoint(g: GraphicsContext) {
+        g.fill = pointColor
+        g.fillOval(x.toInt() - diameter / 2, y - diameter / 2, diameter, diameter)
 
-        g.color = nameColor
-        g.drawString(name, x.toInt() + diameter, y.toInt())
+        g.fill = nameColor
+        g.strokeText(name, x.toInt() + diameter, y)
     }
 
     // endregion

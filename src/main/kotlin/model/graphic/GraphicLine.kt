@@ -1,13 +1,13 @@
 package model.graphic
 
+import javafx.scene.paint.Color
+import javafx.scene.canvas.GraphicsContext
+import kotlin.math.*
 import model.enums.LineAlgorithm
 import model.math.Line
-import java.awt.Color
-import java.awt.Graphics
-import kotlin.math.abs
 
 class GraphicLine : Line {
-    //TODO: change java.awt to TornadoFX
+    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
     var width = 1
@@ -34,43 +34,43 @@ class GraphicLine : Line {
 
     companion object {
         fun draw(
-            g: Graphics,
+            g: GraphicsContext,
             x1: Int, y1: Int,
             x2: Int, y2: Int,
-            color: Color,
-            name: String,
             width: Int,
-            algorithm: LineAlgorithm = LineAlgorithm.DEFAULT
+            color: Color? = null,
+            name: String? = null,
+            algorithm: LineAlgorithm = LineAlgorithm.EQUATION
         ) {
             val line = GraphicLine(x1, y1, x2, y2, width, color, name)
             line.drawLine(g, algorithm)
         }
 
         fun draw(
-            g: Graphics,
+            g: GraphicsContext,
             x1: Double, y1: Double,
             x2: Double, y2: Double,
-            color: Color,
-            name: String,
             width: Int,
-            algorithm: LineAlgorithm = LineAlgorithm.DEFAULT
+            color: Color? = null,
+            name: String? = null,
+            algorithm: LineAlgorithm = LineAlgorithm.EQUATION
         ) {
-            draw(g, x1.toInt(), y1.toInt(), x2.toInt(), y2.toInt(), color, name, width, algorithm)
+            draw(g, x1.toInt(), y1.toInt(), x2.toInt(), y2.toInt(), width, color, name, algorithm)
         }
     }
 
-    fun drawLine(g: Graphics, alg: LineAlgorithm = LineAlgorithm.DEFAULT) {
+    fun drawLine(g: GraphicsContext, alg: LineAlgorithm = LineAlgorithm.EQUATION) {
         when (alg) {
             LineAlgorithm.EQUATION -> drawLineEquation(g)
             LineAlgorithm.DDA -> drawLineDDA(g)
             LineAlgorithm.MIDPOINT -> drawLineMidPoint(g)
-            else -> drawLineGraphics(g)
+            else -> drawLineGraphicsContext(g)
         }
     }
 
     // region DRAW LINE ALGORITHMS
 
-    private fun drawLineEquation(g: Graphics) {
+    private fun drawLineEquation(g: GraphicsContext) {
         // TODO
         val b = calculateYInterception()
         val m = calculateSlope()
@@ -80,19 +80,52 @@ class GraphicLine : Line {
 
 //        x1 = x2 // deltaX = 0
 //        y1 = y2 // deltaY = 0
+        if (deltaX == 0.0 && deltaY == 0.0) {
+            GraphicPoint(p1).drawPoint(g)
+        }
 //        deltaX > deltaY
+        else if (deltaX > deltaY) {
+            val minX = min(p1.x, p2.x).toInt()
+            val maxX = max(p1.x, p2.x).toInt()
+
+            for (x in minX..maxX) {
+                GraphicPoint(
+                    x.toDouble(),
+                    Line.calculateY(x.toDouble(), b, m),
+                    color,
+                    width
+                ).drawPoint(g)
+            }
+        }
 //        deltaX <= deltaY
+        else {
+            val minY = min(p1.y, p2.y).toInt()
+            val maxY = max(p1.y, p2.y).toInt()
+
+            for (y in minY..maxY) {
+                GraphicPoint(
+                    Line.calculateX(y.toDouble(), b, m),
+                    y.toDouble(),
+                    color,
+                    width
+                ).drawPoint(g)
+            }
+        }
+
+        g.fill = color
+        g.strokeText(name, p2.x + width, p2.y)
+
     }
 
-    private fun drawLineDDA(g: Graphics) {
+    private fun drawLineDDA(g: GraphicsContext) {
         // TODO
     }
 
-    private fun drawLineMidPoint(g: Graphics) {
+    private fun drawLineMidPoint(g: GraphicsContext) {
         // TODO
     }
 
-    private fun drawLineGraphics(g: Graphics) {
+    private fun drawLineGraphicsContext(g: GraphicsContext) {
         // TODO
     }
     
