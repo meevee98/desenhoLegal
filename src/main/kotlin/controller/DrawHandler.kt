@@ -18,7 +18,7 @@ class Draw {
         private var firstPoint : GraphicPoint? = null
         private var firstColor : Color = Color.WHITE
 
-        fun drawForm(g: GraphicsContext, form: BasicForm, x: Double, y: Double, diameter: Int, color: Color?, name: String?) {
+        fun drawForm(g: GraphicsContext, form: BasicForm, x: Double, y: Double, diameter: Int, color: Color? = null, name: String? = null) {
             when (form) {
                 BasicForm.POINT -> {
                     GraphicPoint(x, y, color, diameter, formatName(form, name)).drawPoint(g)

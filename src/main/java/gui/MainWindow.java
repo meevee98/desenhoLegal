@@ -1,9 +1,9 @@
 package gui;
 
 import controller.Draw;
+import controller.MainWindowController;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -11,14 +11,14 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import model.enums.BasicForm;
-import model.graphic.GraphicPoint;
 
-public class ApplicationGUI {
+public class MainWindow {
+    private MainWindowController controller;
+
     // TODO: Guardar as constantes em outro lugar
     private final String title = "Bora Desenhar";
     private BasicForm formaAtual = BasicForm.POINT;
@@ -38,8 +38,14 @@ public class ApplicationGUI {
         diffHeight = new SimpleDoubleProperty(0.0);
     }
 
-    public ApplicationGUI(Stage stage) {
+    public MainWindow(MainWindowController controller, Stage stage) {
         iniciateObservables();
+
+        this.controller = controller;
+        iniciateWindow(stage);
+    }
+
+    public void iniciateWindow(Stage stage) {
         // define titulo da janela
         stage.setTitle(title);
 
@@ -52,11 +58,11 @@ public class ApplicationGUI {
 
         // componente para desenho
         Canvas canvas = new Canvas();
+//        controller.context = canvas.getGraphicsContext2D();
 
         // componente para desenhar graficos
 
-        GraphicsContext gc;
-        gc = canvas.getGraphicsContext2D();
+        GraphicsContext gc = canvas.getGraphicsContext2D();
 
         // componente para os botões
         HBox buttons = new HBox(5);
@@ -64,31 +70,9 @@ public class ApplicationGUI {
         diffHeight.bind(buttons.heightProperty().add(panePadding));
 
         // Eventos de mouse
-        // trata mouseMoved
-        canvas.setOnMouseMoved(event -> {
-            stage.setTitle(title + " (" + (int)event.getX() + ", " + (int)event.getY() + ")" );
-        });
-
-        canvas.setOnMouseExited(event -> stage.setTitle(title));
-
-        // trata mousePressed
-        canvas.setOnMousePressed(event -> {
-            int x, y;
-
-            if (event.getButton() == MouseButton.PRIMARY) {
-                x = (int)event.getX();
-                y = (int)event.getY();
-
-                // desenha ponto na posicao clicada com nome padrão
-                Draw.Handler.drawForm(gc, formaAtual, x, y, drawDiameter, primaryColor, null);
-            } else if (event.getButton() == MouseButton.SECONDARY) {
-                x = (int)event.getX();
-                y = (int)event.getY();
-
-                // desenha ponto na posicao clicada com as coordenadas
-                Draw.Handler.drawForm(gc, formaAtual, x, y, drawDiameter, secondaryColor, null);
-            }
-        });
+        canvas.setOnMouseMoved(event -> controller.updateWindowTitleWithCoordinates(stage, event));
+        canvas.setOnMouseExited(event -> controller.updateWindowTitleWithoutCoordinates(stage));
+        canvas.setOnMousePressed(event -> controller.drawForm(gc, event));
 
         // atributos do painel
         pane.setBackground(new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -116,50 +100,40 @@ public class ApplicationGUI {
     private void includeButtons(HBox buttons, GraphicsContext gc) {
         // desenhar pontos
         Button point = new Button("Ponto");
-        point.setOnAction(click -> formaAtual = BasicForm.POINT);
+        point.setOnAction(click -> controller.selectPoint());
 
         // desenhar linhas
         Button line = new Button("Reta");
-        line.setOnAction(click -> {
-            formaAtual = BasicForm.LINE;
-            Draw.Handler.reset();
-        });
+        line.setOnAction(click -> controller.selectLine());
 
         // desenhar circulos
         Button circle = new Button("Círculo");
-        circle.setOnAction(click -> {
-            formaAtual = BasicForm.CIRCLE;
-            Draw.Handler.reset();
-        });
+        circle.setOnAction(click -> controller.selectCircle());
 
         // desenhar outras formas
         Button drawForm = new Button("Outras Formas");
-        drawForm.setOnAction(click -> {
-            drawFormDialog(gc);
-        });
+        drawForm.setOnAction(click -> drawFormDialog(gc)); // TODO: passar OnActionListener para o controller
 
         // limpar canvas
-        Button limpar = new Button("Limpar");
-        limpar.setOnAction(click -> clean(gc) );
+        Button clear = new Button("Limpar");
+        clear.setOnAction(click -> clear(gc) ); // TODO: passar OnActionListener para o controller
+
+
+        // color choices
+        ColorPicker primaryColorPicker = new ColorPicker();
+        ColorPicker secondaryColorPicker = new ColorPicker();
+        controller.bindColors(primaryColorPicker, secondaryColorPicker);
 
         VBox colors = new VBox(5);
-        // primary color choice
-        ColorPicker primaryColorPicker = new ColorPicker(primaryColor);
-        primaryColorPicker.setOnAction(t -> primaryColor = primaryColorPicker.getValue());
-
-        // secondary color choice
-        ColorPicker secondaryColorPicker = new ColorPicker(secondaryColor);
-        secondaryColorPicker.setOnAction(t -> secondaryColor = secondaryColorPicker.getValue());
-
         colors.getChildren().addAll(primaryColorPicker, secondaryColorPicker);
         colors.setMinHeight(60);
 
-        buttons.getChildren().addAll(point, line, circle, drawForm, limpar, colors);
+        buttons.getChildren().addAll(point, line, circle, drawForm, clear, colors);
     }
 
-    private void clean(GraphicsContext gc) {
+    private void clear(GraphicsContext gc) {
         gc.clearRect(0, 0, canvasWidth.get(), canvasHeight.get());
-        Draw.Handler.reset();
+        controller.resetDraw();
     }
 
     private void drawFormDialog(GraphicsContext gc) {
@@ -170,15 +144,9 @@ public class ApplicationGUI {
         drawFormDialog.setContentText("Divisões:");
 
         drawFormDialog.showAndWait()
-                .filter(div -> {
-                    try {
-                        return Integer.parseInt(div) > 0;
-                    } catch (Exception e) {
-                        return false;
-                    }
-                })
+                .filter(input -> controller.isIntGreaterThanZero(input))
                 .ifPresent(div -> {
-                    clean(gc);
+                    clear(gc);
                     Draw.Handler.drawLineForm(
                             gc,
                             canvasWidth.get(),

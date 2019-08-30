@@ -1,6 +1,7 @@
 package app;
 
-import gui.ApplicationGUI;
+import controller.MainWindowController;
+import gui.MainWindow;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -16,7 +17,8 @@ public class App extends Application{
 
     @Override
     public void start(Stage palco) throws Exception {
-        new ApplicationGUI(palco);
+        MainWindowController controller = new MainWindowController();
+        new MainWindow(controller, palco);
     }
 }
 
