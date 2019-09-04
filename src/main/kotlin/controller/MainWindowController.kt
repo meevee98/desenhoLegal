@@ -1,25 +1,29 @@
 package controller
 
 import javafx.beans.property.DoubleProperty
+import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleDoubleProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.event.EventHandler
+import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.ColorPicker
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
+import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
+import model.constants.Constants
 import model.enums.BasicForm
 
 class MainWindowController {
-    val title = "Bora Desenhar"
-    var actualForm = BasicForm.POINT
-    var drawDiameter: Int = 4
-    val panePadding = 10
+    val title = Constants.WINDOW_TITLE
+    var actualForm = Constants.DEFAULT_GRAPHIC_FORM
+    var drawDiameter: Int = Constants.DEFAULT_DRAW_DIAMETER
+    val panePadding: Double = Constants.DEFAULT_PANE_PADDING
 
-    val defaultColor = Color.BLACK
-    var primaryColor: Color = Color.BLACK
-    var secondaryColor: Color = Color.WHITE
+    var primaryColor = SimpleObjectProperty<Color>(Constants.DEFAULT_PRIMARY_COLOR)
+    var secondaryColor = SimpleObjectProperty<Color>(Constants.DEFAULT_SECONDARY_COLOR)
 
     var canvasWidth: DoubleProperty
     var canvasHeight: DoubleProperty
@@ -33,17 +37,25 @@ class MainWindowController {
 
     // region DataBinding
 
-    fun bindColors(primaryPicker: ColorPicker, secondaryPicker: ColorPicker) {
-        primaryPicker.value = primaryColor
-        primaryPicker.onAction = EventHandler{
-            primaryColor = primaryPicker.value
-        }
+    fun bindColors(primaryPicker: ObjectProperty<Color>, secondaryPicker: ObjectProperty<Color> ) {
+        primaryPicker.bindBidirectional(primaryColor)
+        secondaryPicker.bindBidirectional(secondaryColor)
+    }
 
-        secondaryPicker.value = secondaryColor
-        secondaryPicker.onAction = EventHandler{
-            secondaryColor = secondaryPicker.value
-        }
+    fun bindCanvasSize(pane: Pane, canvas: Canvas) {
+        // inicializa variaveis observables
+        canvas.widthProperty().bindBidirectional(canvasWidth)
+        canvas.heightProperty().bindBidirectional(canvasHeight)
 
+        // Conecta o tamanho do canvas ao tamanho do painel
+        canvas.widthProperty().bind(
+                pane.widthProperty())
+        canvas.heightProperty().bind(
+                pane.heightProperty().subtract(diffHeight))
+    }
+
+    fun bindHeight(pane: Pane) {
+        diffHeight.bind(pane.heightProperty().add(panePadding))
     }
 
     // endregion
@@ -62,6 +74,7 @@ class MainWindowController {
     // endregion
 
     // region SelectForm
+
     fun selectPoint() {
         actualForm = BasicForm.POINT
     }
@@ -80,12 +93,12 @@ class MainWindowController {
         val divisions = input.toIntOrNull()
 
         if (divisions != null && divisions > 0) {
-            Draw.Handler.drawLineForm(context, canvasWidth.get(), canvasHeight.get(), divisions, 1, primaryColor)
+            DrawHandler.drawLineForm(context, canvasWidth.get(), canvasHeight.get(), divisions, 1, primaryColor.get())
         }
     }
 
     fun resetDraw() {
-        Draw.Handler.reset()
+        DrawHandler.reset()
     }
 
     // endregion
@@ -102,12 +115,12 @@ class MainWindowController {
         // só responde ao clique se foi clicado apenas uma vez
         if (event.clickCount == 1) {
             val color = when (event.button) {
-                MouseButton.PRIMARY -> primaryColor
-                MouseButton.SECONDARY -> secondaryColor
-                else -> defaultColor
+                MouseButton.PRIMARY -> primaryColor.get()
+                MouseButton.SECONDARY -> secondaryColor.get()
+                else -> Constants.DEFAULT_PRIMARY_COLOR
             }
 
-            Draw.Handler.drawForm(context, actualForm, event.x, event.y, drawDiameter, color)
+            DrawHandler.drawForm(context, actualForm, event.x, event.y, drawDiameter, color)
         }
     }
 
@@ -116,13 +129,13 @@ class MainWindowController {
         val divisions = div.toIntOrNull()
 
         if (divisions != null && divisions > 0) {
-            Draw.Handler.drawLineForm(
+            DrawHandler.drawLineForm(
                     context,
                     canvasWidth.get(),
                     canvasHeight.get(),
                     divisions,
                     1,
-                    primaryColor
+                    primaryColor.get()
             )
         }
     }

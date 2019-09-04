@@ -8,13 +8,9 @@ import model.graphic.GraphicLine
 import model.graphic.GraphicPoint
 import model.graphic.form.LineForm
 
-class Draw {
+class DrawHandler {
 
-    companion object Handler {
-        private var pointIndex = 0
-        private var lineIndex = 0
-        private var circleIndex = 0
-
+    companion object {
         private var firstPoint : GraphicPoint? = null
         private var firstColor : Color = Color.WHITE
 
