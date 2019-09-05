@@ -4,10 +4,11 @@ import javafx.beans.property.DoubleProperty
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.event.EventHandler
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
-import javafx.scene.control.ColorPicker
+import javafx.scene.control.Alert
+import javafx.scene.control.Alert.AlertType
+import javafx.scene.control.TextInputDialog
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.Pane
@@ -17,23 +18,21 @@ import model.constants.Constants
 import model.enums.BasicForm
 
 class MainWindowController {
+    // region Attributes
+
     val title = Constants.WINDOW_TITLE
     var actualForm = Constants.DEFAULT_GRAPHIC_FORM
     var drawDiameter: Int = Constants.DEFAULT_DRAW_DIAMETER
     val panePadding: Double = Constants.DEFAULT_PANE_PADDING
 
-    var primaryColor = SimpleObjectProperty<Color>(Constants.DEFAULT_PRIMARY_COLOR)
-    var secondaryColor = SimpleObjectProperty<Color>(Constants.DEFAULT_SECONDARY_COLOR)
+    var primaryColor = SimpleObjectProperty(Constants.DEFAULT_PRIMARY_COLOR)
+    var secondaryColor = SimpleObjectProperty(Constants.DEFAULT_SECONDARY_COLOR)
 
-    var canvasWidth: DoubleProperty
-    var canvasHeight: DoubleProperty
-    var diffHeight: DoubleProperty
+    var canvasWidth: DoubleProperty = SimpleDoubleProperty(0.0)
+    var canvasHeight: DoubleProperty = SimpleDoubleProperty(0.0)
+    var diffHeight: DoubleProperty = SimpleDoubleProperty(0.0)
 
-    constructor() {
-        this.canvasWidth = SimpleDoubleProperty(0.0)
-        this.canvasHeight = SimpleDoubleProperty(0.0)
-        this.diffHeight = SimpleDoubleProperty(0.0)
-    }
+    // endregion
 
     // region DataBinding
 
@@ -89,24 +88,33 @@ class MainWindowController {
         resetDraw()
     }
 
-    fun selectLineForm(input: String, context: GraphicsContext) {
-        val divisions = input.toIntOrNull()
+    fun selectLineForm(context: GraphicsContext) {
+        TextInputDialog().run {
+            graphic = null // remove o icone - null não é o default
+            title = "Desenhar Forma"
+            headerText = "Insira o número de divisões"
+            contentText = "Divisões:"
 
-        if (divisions != null && divisions > 0) {
-            DrawHandler.drawLineForm(context, canvasWidth.get(), canvasHeight.get(), divisions, 1, primaryColor.get())
+            showAndWait()
+        }.ifPresent { input ->
+            if (isDivisionsAmountValid(input)) {
+                drawLineForm(context, input)
+            }
+            else {
+                popupDialog(Constants.INVALID_INPUT, "Valor inserido \"$input\" é inválido para quantidade de divisões")
+            }
         }
-    }
-
-    fun resetDraw() {
-        DrawHandler.reset()
     }
 
     // endregion
 
-    // region Actions
+    // region DrawOnCanvas
+
+    private fun resetDraw() {
+        DrawHandler.reset()
+    }
 
     fun clearCanvas(context: GraphicsContext) {
-        // TODO não está funcionando chamar esse método a partir da MainWindow
         context.clearRect(0.0, 0.0, canvasWidth.get(), canvasHeight.get())
         resetDraw()
     }
@@ -124,17 +132,17 @@ class MainWindowController {
         }
     }
 
-    fun drawLineForm(context: GraphicsContext, div: String) {
-        // TODO não está funcionando chamar esse método a partir da MainWindow
-        val divisions = div.toIntOrNull()
+    private fun drawLineForm(context: GraphicsContext, input: String) {
+        val divisions = input.toIntOrNull()
 
         if (divisions != null && divisions > 0) {
+            clearCanvas(context)
             DrawHandler.drawLineForm(
                     context,
                     canvasWidth.get(),
                     canvasHeight.get(),
                     divisions,
-                    1,
+                    Constants.HAIRLINE,
                     primaryColor.get()
             )
         }
@@ -144,8 +152,19 @@ class MainWindowController {
 
     // region Validation
 
-    fun isIntGreaterThanZero(integer: String): Boolean {
+    private fun isDivisionsAmountValid(integer: String): Boolean {
+        // a regra atual é ser > 0
+        // esse método toIntOrNull retorna null caso a String não seja um formato de número válido
         return integer.toIntOrNull() ?: 0 > 0
+    }
+
+    fun popupDialog(dialogTitle: String, dialogContent: String, dialogType: AlertType = AlertType.CONFIRMATION) {
+        Alert(dialogType).run {
+            graphic = null // remove o icone - null não é o default
+            title = dialogTitle
+            contentText = dialogContent
+            showAndWait()
+        }
     }
 
     // endregion
