@@ -8,17 +8,13 @@ import model.graphic.GraphicLine
 import model.graphic.GraphicPoint
 import model.graphic.form.LineForm
 
-class Draw {
+class DrawHandler {
 
-    companion object Handler {
-        private var pointIndex = 0
-        private var lineIndex = 0
-        private var circleIndex = 0
-
+    companion object {
         private var firstPoint : GraphicPoint? = null
         private var firstColor : Color = Color.WHITE
 
-        fun drawForm(g: GraphicsContext, form: BasicForm, x: Double, y: Double, diameter: Int, color: Color?, name: String?) {
+        fun drawForm(g: GraphicsContext, form: BasicForm, x: Double, y: Double, diameter: Int, color: Color? = null, name: String? = null) {
             when (form) {
                 BasicForm.POINT -> {
                     GraphicPoint(x, y, color, diameter, formatName(form, name)).drawPoint(g)
