@@ -26,21 +26,37 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
         // componente para os botões
         val buttons = includeButtons(context)
-        controller.bindHeight(buttons)
+        controller.bindWidth(buttons)
 
         // Eventos de mouse
         canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
         canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
         canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
 
+        val canvasPane = Pane().apply {
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_PRIMARY_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(0.0, 0.0, 0.0, 1.5)
+            ))
+            children.add(canvas)
+        }
+
         // Painel para os componentes
-        val pane = VBox(controller.panePadding).apply {
+        val pane = HBox(controller.panePadding).apply {
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_PRIMARY_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(1.5)
+            ))
             background = Background(BackgroundFill(
                     Constants.DEFAULT_SECONDARY_COLOR,
                     CornerRadii.EMPTY,
                     Insets.EMPTY
             ))
-            children.addAll(buttons, canvas) // posiciona o componente de desenho
+            children.addAll(buttons, canvasPane) // posiciona o componente de desenho
         }
         controller.bindCanvasSize(pane, canvas)
 
@@ -53,7 +69,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             title = controller.title
 
             // define largura e altura da janela
-            width = 500.0
+            width = 800.0
             height = 500.0
 
             this.scene = scene
@@ -71,14 +87,15 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     primaryColorPicker.valueProperty(),
                     secondaryColorPicker.valueProperty()
             )
-
             children.addAll(primaryColorPicker, secondaryColorPicker)
-            minHeight = 60.0
         }
 
         // Painel para os botões
-        return HBox(5.0).apply {
+        return VBox(5.0).apply {
+            padding = Insets(10.0)
+            minWidth = 200.0
             children.addAll(
+                    colors,
                     Button().apply { // desenhar pontos
                         text = "Ponto"
                         setOnAction { controller.selectPoint() }
@@ -98,8 +115,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     Button().apply { // limpar canvas
                         text = "Limpar"
                         setOnAction { controller.clearCanvas(context) }
-                    },
-                    colors
+                    }
             )
         }
     }

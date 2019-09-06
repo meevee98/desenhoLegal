@@ -30,6 +30,7 @@ class MainWindowController {
 
     var canvasWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var canvasHeight: DoubleProperty = SimpleDoubleProperty(0.0)
+    var diffWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var diffHeight: DoubleProperty = SimpleDoubleProperty(0.0)
 
     // endregion
@@ -48,13 +49,17 @@ class MainWindowController {
 
         // Conecta o tamanho do canvas ao tamanho do painel
         canvas.widthProperty().bind(
-                pane.widthProperty())
+                pane.widthProperty().subtract(diffWidth))
         canvas.heightProperty().bind(
                 pane.heightProperty().subtract(diffHeight))
     }
 
     fun bindHeight(pane: Pane) {
-        diffHeight.bind(pane.heightProperty().add(panePadding))
+        diffHeight.bind(pane.heightProperty().add(panePadding).add(diffHeight.value))
+    }
+
+    fun bindWidth(pane: Pane) {
+        diffWidth.bind(pane.widthProperty().add(panePadding).add(diffWidth.value))
     }
 
     // endregion
