@@ -2,13 +2,16 @@ package model.graphic.form
 
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
+import model.graphic.Form
 import model.graphic.GraphicLine
 
-class LineForm {
+class LineForm : Form {
     val x: Int
     val y: Int
     var color: Color = Color.BLACK
     var width = 1
+
+    val lines = mutableListOf<GraphicLine>()
 
     constructor(x: Int, y: Int, width: Int? = null, color: Color? = null){
         this.x = x
@@ -33,10 +36,16 @@ class LineForm {
             val x3 = (diff * spacingX).toInt()
             val y3 = ((diff + 1) * spacingY).toInt()
 
-            GraphicLine(0, y1, x2, y, width, color).drawLine(g)
-            GraphicLine(x1, 0, x, y2, width, color).drawLine(g)
-            GraphicLine(0, y3, x2, 0, width, color).drawLine(g)
-            GraphicLine(x3, y, x, y1, width, color).drawLine(g)
+            lines.add(GraphicLine(0, y1, x2, y, width, color))
+            lines.add(GraphicLine(x1, 0, x, y2, width, color))
+            lines.add(GraphicLine(0, y3, x2, 0, width, color))
+            lines.add(GraphicLine(x3, y, x, y1, width, color))
         }
+
+        draw(g)
+    }
+
+    override fun draw(gc: GraphicsContext) {
+        lines.forEach { line -> line.draw(gc) }
     }
 }
