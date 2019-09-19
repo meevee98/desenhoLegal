@@ -1,14 +1,17 @@
 package controller
 
+import java.lang.Exception
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.scene.canvas.Canvas
+import javafx.geometry.Rectangle2D
+import javafx.scene.SnapshotParameters
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Alert
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.TextInputDialog
+import javafx.scene.image.Image
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.Pane
@@ -33,6 +36,14 @@ class MainWindowController {
     var diffWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var diffHeight: DoubleProperty = SimpleDoubleProperty(0.0)
 
+    var canvasPane: Pane = Pane()
+    val canvasSnapshot = SimpleObjectProperty<Image>()
+
+    init {
+        canvasWidth.addListener { _ -> updateSnapshot() }
+        canvasHeight.addListener { _ -> updateSnapshot() }
+    }
+
     // endregion
 
     // region DataBinding
@@ -42,16 +53,10 @@ class MainWindowController {
         secondaryPicker.bindBidirectional(secondaryColor)
     }
 
-    fun bindCanvasSize(pane: Pane, canvas: Canvas) {
+    fun bindCanvasSize(pane: Pane) {
         // inicializa variaveis observables
-        canvas.widthProperty().bindBidirectional(canvasWidth)
-        canvas.heightProperty().bindBidirectional(canvasHeight)
-
-        // Conecta o tamanho do canvas ao tamanho do painel
-        canvas.widthProperty().bind(
-                pane.widthProperty().subtract(diffWidth))
-        canvas.heightProperty().bind(
-                pane.heightProperty().subtract(diffHeight))
+        canvasWidth.bind(pane.widthProperty().subtract(diffWidth))
+        canvasHeight.bind(pane.heightProperty().subtract(diffHeight))
     }
 
     fun bindHeight(pane: Pane) {
@@ -117,10 +122,11 @@ class MainWindowController {
 
     private fun resetDraw() {
         DrawHandler.reset()
+        updateSnapshot()
     }
 
     fun clearCanvas(context: GraphicsContext) {
-        context.clearRect(0.0, 0.0, canvasWidth.get(), canvasHeight.get())
+        context.clearRect(0.0, 0.0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT)
         resetDraw()
     }
 
@@ -135,6 +141,7 @@ class MainWindowController {
 
             DrawHandler.drawForm(context, actualForm, event.x, event.y, drawDiameter, color)
         }
+        updateSnapshot()
     }
 
     private fun drawLineForm(context: GraphicsContext, input: String) {
@@ -150,6 +157,20 @@ class MainWindowController {
                     Constants.HAIRLINE,
                     primaryColor.get()
             )
+        }
+        updateSnapshot()
+    }
+
+    fun updateSnapshot() {
+        try {
+            val params = SnapshotParameters().apply {
+                viewport = Rectangle2D(diffWidth.value, diffHeight.value, canvasWidth.value, canvasHeight.value)
+            }
+            canvasSnapshot.value = canvasPane.snapshot(params, null)
+        }
+        catch (e: Exception) {
+            // essa exceção só acontece na inicialização, antes de disparar a scene
+            // ignorar por enquanto
         }
     }
 
