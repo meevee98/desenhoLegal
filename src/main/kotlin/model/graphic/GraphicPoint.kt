@@ -4,7 +4,7 @@ import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
 import model.math.Point
 
-class GraphicPoint : Point {
+class GraphicPoint : Point, Form {
     //TODO: change javafx to TornadoFX
     var pointColor: Color = Color.BLACK
     var nameColor: Color = Color.BLACK
@@ -44,6 +44,10 @@ class GraphicPoint : Point {
 
         g.fill = nameColor
         g.strokeText(name, x.toInt() + diameter, y)
+    }
+
+    override fun draw(gc: GraphicsContext) {
+        drawPoint(gc)
     }
 
     // endregion
