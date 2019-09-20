@@ -1,21 +1,16 @@
 package view
 
 import controller.MainWindowController
-import javafx.beans.property.ObjectProperty
-import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Insets
 import javafx.geometry.Pos
-import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
-import javafx.scene.SnapshotParameters
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Button
 import javafx.scene.control.ColorPicker
-import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
-import javafx.scene.shape.Rectangle
 import javafx.stage.Stage
 import model.constants.Constants
 
@@ -94,6 +89,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
         // cria e insere cena
         val scene = Scene(pane)
+        setShortcuts(scene, context)
 
         // define e inicia o stage
         stage.run {
@@ -146,10 +142,30 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     },
                     Button().apply { // limpar canvas
                         text = "Limpar"
-                        setOnAction { controller.clearCanvas(context) }
+                        setOnAction { controller.clear(context) }
+                    },
+                    Button().apply { // desfazer ação
+                        text = "Desfazer"
+                        setOnAction { controller.undo(context) }
+                    },
+                    Button().apply { // refazer ação
+                        text = "Refazer"
+                        setOnAction { controller.redo(context) }
+                    },
+                    Button().apply { // clipping do canvas
+                        text = "Clip"
+                        isDisable = true
+                        setOnAction { controller.clip(context) }
                     }
             )
         }
     }
 
+    private fun setShortcuts(scene: Scene, context: GraphicsContext) {
+        val shortcuts = mapOf(
+                KeyCombination.valueOf("Ctrl+Z") to Runnable { controller.undo(context) }
+        )
+
+        scene.accelerators.putAll(shortcuts)
+    }
 }

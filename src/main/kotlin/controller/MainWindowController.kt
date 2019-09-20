@@ -130,6 +130,31 @@ class MainWindowController {
         resetDraw()
     }
 
+    fun clear(context: GraphicsContext) {
+        clearCanvas(context)
+        FormStorage.clear()
+    }
+
+    fun undo(context: GraphicsContext) {
+        if( FormStorage.undo() ) {
+            clearCanvas(context)
+            FormStorage.redraw(context)
+        }
+        resetDraw()
+    }
+
+    fun redo(context: GraphicsContext) {
+        if( FormStorage.redo() ) {
+            clearCanvas(context)
+            FormStorage.redraw(context)
+        }
+        resetDraw()
+    }
+
+    fun clip(context: GraphicsContext) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     fun drawForm(context: GraphicsContext, event: MouseEvent) {
         // só responde ao clique se foi clicado apenas uma vez
         if (event.clickCount == 1) {

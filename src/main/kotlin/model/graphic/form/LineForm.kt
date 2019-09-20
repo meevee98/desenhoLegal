@@ -13,14 +13,15 @@ class LineForm : Form {
 
     val lines = mutableListOf<GraphicLine>()
 
-    constructor(x: Int, y: Int, width: Int? = null, color: Color? = null){
+    constructor(x: Int, y: Int, divisions: Int, width: Int? = null, color: Color? = null){
         this.x = x
         this.y = y
         width?.also { this.width = it }
         color?.also { this.color = it }
+        createForm(divisions)
     }
 
-    fun drawForm(g: GraphicsContext, divisions: Int) {
+    fun createForm(divisions: Int) {
         val spacingX = x.toDouble() / divisions
         val spacingY = y.toDouble() / divisions
 
@@ -41,8 +42,6 @@ class LineForm : Form {
             lines.add(GraphicLine(0, y3, x2, 0, width, color))
             lines.add(GraphicLine(x3, y, x, y1, width, color))
         }
-
-        draw(g)
     }
 
     override fun draw(gc: GraphicsContext) {
