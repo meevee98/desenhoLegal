@@ -1,13 +1,21 @@
 package view
 
 import controller.MainWindowController
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Insets
+import javafx.geometry.Pos
+import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
+import javafx.scene.SnapshotParameters
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Button
 import javafx.scene.control.ColorPicker
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 import javafx.scene.layout.*
+import javafx.scene.shape.Rectangle
 import javafx.stage.Stage
 import model.constants.Constants
 
@@ -19,30 +27,70 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
     private fun iniciateWindow(stage: Stage) {
         // componente para desenho
-        val canvas = Canvas()
+        val canvas = Canvas().apply {
+            width = Constants.CANVAS_WIDTH
+            height = Constants.CANVAS_HEIGHT
+        }
 
         // componente para desenhar graficos
         val context = canvas.graphicsContext2D
 
         // componente para os botões
         val buttons = includeButtons(context)
-        controller.bindHeight(buttons)
-
+        controller.bindWidth(buttons)
+        
         // Eventos de mouse
         canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
         canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
         canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
 
+        val canvasPane = BorderPane().apply {
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_SEPARATOR_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(0.0, 0.0, 0.0, 2.0)
+            ))
+            center = canvas
+        }
+        controller.canvasPane = canvasPane
+
+        val miniWindow = ImageView().apply {
+            fitWidth = 200.0
+            fitHeight = 200.0
+            imageProperty().bind(controller.canvasSnapshot)
+            isPreserveRatio = true
+        }
+
+        val gridMenu = GridPane().apply {
+            rowConstraints.add(RowConstraints().apply {
+                vgrow = Priority.ALWAYS
+            })
+            columnConstraints.add(ColumnConstraints().apply {
+                alignment = Pos.BOTTOM_CENTER
+            })
+            add(buttons, 0, 0)
+            add(miniWindow, 0, 1)
+
+        }
+
         // Painel para os componentes
-        val pane = VBox(controller.panePadding).apply {
+        val pane = HBox(Constants.DEFAULT_PANE_PADDING).apply {
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_SEPARATOR_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(2.0)
+            ))
             background = Background(BackgroundFill(
-                    Constants.DEFAULT_SECONDARY_COLOR,
+                    Constants.DEFAULT_BACKGROUND_COLOR,
                     CornerRadii.EMPTY,
                     Insets.EMPTY
             ))
-            children.addAll(buttons, canvas) // posiciona o componente de desenho
+
+            children.addAll(gridMenu, canvasPane) // posiciona o componente de desenho
         }
-        controller.bindCanvasSize(pane, canvas)
+        controller.bindCanvasSize(pane)
 
         // cria e insere cena
         val scene = Scene(pane)
@@ -53,8 +101,8 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             title = controller.title
 
             // define largura e altura da janela
-            width = 500.0
-            height = 500.0
+            width = 800.0
+            height = 600.0
 
             this.scene = scene
             show()
@@ -71,14 +119,15 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     primaryColorPicker.valueProperty(),
                     secondaryColorPicker.valueProperty()
             )
-
             children.addAll(primaryColorPicker, secondaryColorPicker)
-            minHeight = 60.0
         }
 
         // Painel para os botões
-        return HBox(5.0).apply {
+        return VBox(5.0).apply {
+            padding = Insets(10.0)
+            minWidth = 200.0
             children.addAll(
+                    colors,
                     Button().apply { // desenhar pontos
                         text = "Ponto"
                         setOnAction { controller.selectPoint() }
@@ -98,8 +147,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     Button().apply { // limpar canvas
                         text = "Limpar"
                         setOnAction { controller.clearCanvas(context) }
-                    },
-                    colors
+                    }
             )
         }
     }
