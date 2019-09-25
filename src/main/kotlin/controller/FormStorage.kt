@@ -70,15 +70,7 @@ object FormStorage {
 
     private fun verifyUndoHistory() {
         if (!undoHistory.empty()) {
-            saveOnHistory()
-            val list = undoHistory.toList()
-
-            // dessa forma, futuros undo não vão do primeiro direto pro último estado
-            while (undoHistory.size > 1) {
-                history.push(undoHistory.pop())
-            }
-            undoHistory.pop() // se dentro do loop, o primeiro undo vai ser colocado duas vezes
-            history.addAll(list)
+            undoHistory.clear()
         }
     }
 }

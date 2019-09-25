@@ -163,7 +163,10 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
     private fun setShortcuts(scene: Scene, context: GraphicsContext) {
         val shortcuts = mapOf(
-                KeyCombination.valueOf("Ctrl+Z") to Runnable { controller.undo(context) }
+                KeyCombination.valueOf("Ctrl+Z") to Runnable { controller.undo(context) },
+                KeyCombination.valueOf("Ctrl+Y") to Runnable { controller.redo(context) },
+                KeyCombination.valueOf("Ctrl+Shift+Z") to Runnable { controller.redo(context) },
+                KeyCombination.valueOf("Ctrl+Delete") to Runnable { controller.clear(context) }
         )
 
         scene.accelerators.putAll(shortcuts)
