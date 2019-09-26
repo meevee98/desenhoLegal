@@ -6,7 +6,7 @@ import model.enums.CircleAlgorithm
 import model.math.Circle
 import java.lang.Math.PI
 
-class GraphicCircle : Circle {
+class GraphicCircle : Circle, Form {
     //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
@@ -67,6 +67,10 @@ class GraphicCircle : Circle {
             CircleAlgorithm.MIDPOINT -> drawCircleMidPoint(g)
             else -> drawCircleGraphicsContext(g)
         }
+    }
+
+    override fun draw(gc: GraphicsContext) {
+        drawCircle(gc)
     }
 
     // region DRAW CIRCLE ALGORITHMS

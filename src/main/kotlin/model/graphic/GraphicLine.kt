@@ -6,7 +6,7 @@ import kotlin.math.*
 import model.enums.LineAlgorithm
 import model.math.Line
 
-class GraphicLine : Line {
+class GraphicLine : Line, Form {
     //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
@@ -66,6 +66,10 @@ class GraphicLine : Line {
             LineAlgorithm.MIDPOINT -> drawLineMidPoint(g)
             else -> drawLineGraphicsContext(g)
         }
+    }
+
+    override fun draw(gc: GraphicsContext) {
+        drawLine(gc)
     }
 
     // region DRAW LINE ALGORITHMS
