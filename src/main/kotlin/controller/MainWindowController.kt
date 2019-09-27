@@ -98,6 +98,11 @@ class MainWindowController {
         resetDraw()
     }
 
+    fun selectRectangle() {
+        actualForm = BasicForm.RECTANGLE
+        resetDraw()
+    }
+
     fun selectLineForm(context: GraphicsContext) {
         TextInputDialog().run {
             graphic = null // remove o icone - null não é o default
@@ -204,9 +209,9 @@ class MainWindowController {
     // region Validation
 
     private fun isDivisionsAmountValid(integer: String): Boolean {
-        // a regra atual é ser > 0
+        // a regra atual é ser > 0 e <= 500
         // esse método toIntOrNull retorna null caso a String não seja um formato de número válido
-        return integer.toIntOrNull() ?: 0 > 0
+        return integer.toIntOrNull() ?: 0 in 1..500
     }
 
     fun popupDialog(dialogTitle: String, dialogContent: String, dialogType: AlertType = AlertType.CONFIRMATION) {

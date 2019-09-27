@@ -101,14 +101,29 @@ class GraphicLine : Line, Form {
                 ).drawPoint(g)
             }
         }
-//        deltaX <= deltaY
-        else {
+//        deltaX = deltaY
+        else if (deltaX == 0.0) {
             val minY = min(p1.y, p2.y).toInt()
             val maxY = max(p1.y, p2.y).toInt()
 
             for (y in minY..maxY) {
                 GraphicPoint(
-                    Line.calculateX(y.toDouble(), b, m),
+                    p1.x,
+                    y.toDouble(),
+                    color,
+                    width
+                ).drawPoint(g)
+            }
+        }
+//        deltaX < deltaY
+        else {
+            val minY = min(p1.y, p2.y).toInt()
+            val maxY = max(p1.y, p2.y).toInt()
+
+            for (y in minY..maxY) {
+                val x = Line.calculateX(y.toDouble(), b, m)
+                GraphicPoint(
+                    x,
                     y.toDouble(),
                     color,
                     width
