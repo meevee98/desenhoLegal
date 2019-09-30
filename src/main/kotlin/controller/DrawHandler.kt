@@ -121,7 +121,7 @@ class DrawHandler {
 
         private fun drawPoint(g: GraphicsContext, x: Int, y: Int, diameter: Int, name: String?, color: Color?) {
             // Cria um ponto
-            val point = GraphicPoint(x.toDouble(), y.toDouble(), color, diameter, name)
+            val point = GraphicPoint(x, y, color, diameter, name)
 
             // Desenha o ponto
             point.drawPoint(g)

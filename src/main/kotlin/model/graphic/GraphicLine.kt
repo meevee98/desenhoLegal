@@ -7,7 +7,6 @@ import model.enums.LineAlgorithm
 import model.math.Line
 
 class GraphicLine : Line, Form {
-    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
     var width = 1
@@ -94,8 +93,8 @@ class GraphicLine : Line, Form {
 
             for (x in minX..maxX) {
                 GraphicPoint(
-                    x.toDouble(),
-                    Line.calculateY(x.toDouble(), b, m),
+                    x,
+                    calculateY(x.toDouble(), b, m).toInt(),
                     color,
                     width
                 ).drawPoint(g)
@@ -108,8 +107,8 @@ class GraphicLine : Line, Form {
 
             for (y in minY..maxY) {
                 GraphicPoint(
-                    p1.x,
-                    y.toDouble(),
+                    p1.x.toInt(),
+                    y,
                     color,
                     width
                 ).drawPoint(g)
@@ -123,8 +122,8 @@ class GraphicLine : Line, Form {
             for (y in minY..maxY) {
                 val x = Line.calculateX(y.toDouble(), b, m)
                 GraphicPoint(
-                    x,
-                    y.toDouble(),
+                    x.toInt(),
+                    y,
                     color,
                     width
                 ).drawPoint(g)
