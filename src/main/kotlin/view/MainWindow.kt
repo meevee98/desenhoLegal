@@ -136,6 +136,10 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                         text = "Círculo"
                         setOnAction { controller.selectCircle() }
                     },
+                    Button().apply { // desenhar circulos
+                        text = "Retângulo"
+                        setOnAction { controller.selectRectangle() }
+                    },
                     Button().apply { // desenhar forma com linhas
                         text = "Outras Formas"
                         setOnAction { controller.selectLineForm(context) }

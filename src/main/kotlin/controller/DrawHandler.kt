@@ -6,6 +6,7 @@ import model.enums.BasicForm
 import model.graphic.GraphicCircle
 import model.graphic.GraphicLine
 import model.graphic.GraphicPoint
+import model.graphic.GraphicRectangle
 import model.graphic.form.LineForm
 
 class DrawHandler {
@@ -55,6 +56,25 @@ class DrawHandler {
                         FormStorage.draw(circle, g)
 
                         // retorna o firstPoint para null para que não seja traçado um circulo com centro no novo ponto
+                        firstPoint = null
+                    }
+                }
+                BasicForm.RECTANGLE -> {
+                    val newPoint = GraphicPoint(x, y, color, diameter)
+                    val p1 = firstPoint ?: newPoint
+
+                    if (firstPoint == null) {
+                        // se firstPoint == null, define o novo ponto como o ponto inicial da reta
+                        firstPoint = newPoint
+                        firstColor = newPoint.pointColor
+                        newPoint.drawPoint(g)
+                    }
+                    else {
+                        // se o firstPoint não for null, traça uma reta entre o firstPoint e o novo ponto
+                        val line = GraphicRectangle(p1, GraphicPoint(x, y), diameter, firstColor, formatName(form, name))
+                        FormStorage.draw(line, g)
+
+                        // retorna o firstPoint para null para que não seja traçada um reta entre este e o próximo ponto
                         firstPoint = null
                     }
                 }
