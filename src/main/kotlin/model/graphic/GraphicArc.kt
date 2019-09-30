@@ -40,12 +40,15 @@ class GraphicArc(
     }
 
     // endregion
+
+    // region DRAW
+
     override fun draw(gc: GraphicsContext) {
+        drawArc(gc)
+    }
+
+    fun drawArc(gc: GraphicsContext) {
         val x1 = calculateX(Math.PI / 4, radius).toInt() // 45º
-        val minX = min.x.toInt()
-        val minY = min.y.toInt()
-        val maxX = max.x.toInt()
-        val maxY = max.y.toInt()
 
         for (x in 0..x1) {
             val y = calculateY(x.toDouble(), radius)
@@ -59,41 +62,27 @@ class GraphicArc(
             val cYsubX = (center.y - x).toInt()
             val cYsubY = (center.y - y).toInt()
 
-            if (cXaddX in minX..maxX) {
-                if (cYaddY in minY..maxY) {
-                    GraphicPoint(cXaddX, cYaddY, color, width).drawPoint(gc)
-                }
-                if (cYsubY in minY..maxY) {
-                    GraphicPoint(cXaddX, cYsubY, color, width).drawPoint(gc)
-                }
-            }
-            if (cXaddY in minX..maxX) {
-                if (cYaddX in minY..maxY) {
-                    GraphicPoint(cXaddY, cYaddX, color, width).drawPoint(gc)
-                }
-                if (cYsubX in minY..maxY) {
-                    GraphicPoint(cXaddY, cYsubX, color, width).drawPoint(gc)
-                }
-            }
-            if (cXsubX in minX..maxX) {
-                if (cYaddY in minY..maxY) {
-                    GraphicPoint(cXsubX, cYaddY, color, width).drawPoint(gc)
-                }
-                if (cYsubY in minY..maxY) {
-                    GraphicPoint(cXsubX, cYsubY, color, width).drawPoint(gc)
-                }
-            }
-            if (cXsubY in minX..maxX) {
-                if (cYaddX in minY..maxY) {
-                    GraphicPoint(cXsubY, cYaddX, color, width).drawPoint(gc)
-                }
-                if (cYsubX in minY..maxY) {
-                    GraphicPoint(cXsubY, cYsubX, color, width).drawPoint(gc)
-                }
-            }
-
+            validateCoordinatesAndDrawPoint(cXaddX, cYaddY, gc)
+            validateCoordinatesAndDrawPoint(cXaddX, cYsubY, gc)
+            validateCoordinatesAndDrawPoint(cXaddY, cYaddX, gc)
+            validateCoordinatesAndDrawPoint(cXaddY, cYsubX, gc)
+            validateCoordinatesAndDrawPoint(cXsubX, cYaddY, gc)
+            validateCoordinatesAndDrawPoint(cXsubX, cYsubY, gc)
+            validateCoordinatesAndDrawPoint(cXsubY, cYaddX, gc)
+            validateCoordinatesAndDrawPoint(cXsubY, cYsubX, gc)
         }
-
-
     }
+
+    private fun validateCoordinatesAndDrawPoint(x: Int, y: Int, gc: GraphicsContext) {
+        if (x < min.x || x > max.x) {
+            return
+        }
+        if (y < min.y || y > max.x) {
+            return
+        }
+        GraphicPoint(x, y, color, width).drawPoint(gc)
+    }
+
+    // endregion
+
 }
