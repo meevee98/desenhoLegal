@@ -8,6 +8,8 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Button
 import javafx.scene.control.ColorPicker
+import javafx.scene.control.Menu
+import javafx.scene.control.MenuBar
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
@@ -87,8 +89,19 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         }
         controller.bindCanvasSize(pane)
 
+        val menuBar = MenuBar().apply {
+            menus.addAll(
+                    Menu("Salvar")
+            )
+        }
+
+        val mainPane = BorderPane().apply {
+            top = menuBar
+            bottom = pane
+        }
+
         // cria e insere cena
-        val scene = Scene(pane)
+        val scene = Scene(mainPane)
         setShortcuts(scene, context)
 
         // define e inicia o stage
