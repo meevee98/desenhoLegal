@@ -6,7 +6,9 @@ import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Rectangle2D
+import javafx.scene.Scene
 import javafx.scene.SnapshotParameters
+import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Alert
 import javafx.scene.control.Alert.AlertType
@@ -35,8 +37,10 @@ class MainWindowController {
     var canvasHeight: DoubleProperty = SimpleDoubleProperty(0.0)
     var diffWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var diffHeight: DoubleProperty = SimpleDoubleProperty(0.0)
+    var borderWidth: DoubleProperty = SimpleDoubleProperty(0.0)
+    var borderHeight: DoubleProperty = SimpleDoubleProperty(0.0)
 
-    var canvasPane: Pane = Pane()
+    var canvas = Canvas()
     val canvasSnapshot = SimpleObjectProperty<Image>()
 
     init {
@@ -53,18 +57,23 @@ class MainWindowController {
         secondaryPicker.bindBidirectional(secondaryColor)
     }
 
-    fun bindCanvasSize(pane: Pane) {
+    fun bindCanvasSize(scene: Scene) {
         // inicializa variaveis observables
-        canvasWidth.bind(pane.widthProperty().subtract(diffWidth))
-        canvasHeight.bind(pane.heightProperty().subtract(diffHeight))
-    }
+        canvas.boundsInParentProperty().addListener { observable, oldValue, newValue ->
+            diffWidth.set(newValue.minX)
+            diffHeight.set(newValue.minY)
+        }
 
-    fun bindHeight(pane: Pane) {
-        diffHeight.bind(pane.heightProperty().add(panePadding).add(diffHeight.value))
-    }
+        canvas.parent.boundsInParentProperty().addListener { observable, oldValue, newValue ->
+            val diffX = newValue.minX - oldValue.minX
+            val diffY = newValue.minY - oldValue.minY
+            borderWidth.set(borderWidth.doubleValue() + diffX)
+            borderHeight.set(borderHeight.doubleValue() + diffY)
+        }
 
-    fun bindWidth(pane: Pane) {
-        diffWidth.bind(pane.widthProperty().add(panePadding).add(diffWidth.value))
+        canvasWidth.bind(scene.widthProperty().subtract(diffWidth).subtract(borderWidth))
+        canvasHeight.bind(scene.heightProperty().subtract(diffHeight).subtract(borderHeight))
+
     }
 
     // endregion
@@ -196,12 +205,13 @@ class MainWindowController {
             val params = SnapshotParameters().apply {
                 viewport = Rectangle2D(diffWidth.value, diffHeight.value, canvasWidth.value, canvasHeight.value)
             }
-            canvasSnapshot.value = canvasPane.snapshot(params, null)
+            canvasSnapshot.value = canvas.snapshot(params, null)
         }
         catch (e: Exception) {
             // essa exceção só acontece na inicialização, antes de disparar a scene
             // ignorar por enquanto
         }
+
     }
 
     // endregion

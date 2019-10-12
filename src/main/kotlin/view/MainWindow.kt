@@ -8,6 +8,8 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Button
 import javafx.scene.control.ColorPicker
+import javafx.scene.control.Menu
+import javafx.scene.control.MenuBar
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
@@ -32,23 +34,22 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
         // componente para os botões
         val buttons = includeButtons(context)
-        controller.bindWidth(buttons)
         
         // Eventos de mouse
         canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
         canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
         canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
 
-        val canvasPane = BorderPane().apply {
+        val canvasPane = Pane().apply {
             border = Border(BorderStroke(
                     Constants.DEFAULT_SEPARATOR_COLOR,
                     BorderStrokeStyle.SOLID,
                     CornerRadii.EMPTY,
                     BorderWidths(0.0, 0.0, 0.0, 2.0)
             ))
-            center = canvas
+            children.add(canvas)
         }
-        controller.canvasPane = canvasPane
+        controller.canvas = canvas
 
         val miniWindow = ImageView().apply {
             fitWidth = 200.0
@@ -57,39 +58,49 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             isPreserveRatio = true
         }
 
-        val gridMenu = GridPane().apply {
-            rowConstraints.add(RowConstraints().apply {
-                vgrow = Priority.ALWAYS
-            })
-            columnConstraints.add(ColumnConstraints().apply {
-                alignment = Pos.BOTTOM_CENTER
-            })
-            add(buttons, 0, 0)
-            add(miniWindow, 0, 1)
-
+        val menuBar = MenuBar().apply {
+            menus.addAll(
+                    Menu("Salvar")
+            )
         }
 
         // Painel para os componentes
-        val pane = HBox(Constants.DEFAULT_PANE_PADDING).apply {
-            border = Border(BorderStroke(
-                    Constants.DEFAULT_SEPARATOR_COLOR,
-                    BorderStrokeStyle.SOLID,
-                    CornerRadii.EMPTY,
-                    BorderWidths(2.0)
-            ))
-            background = Background(BackgroundFill(
-                    Constants.DEFAULT_BACKGROUND_COLOR,
-                    CornerRadii.EMPTY,
-                    Insets.EMPTY
-            ))
+        val pane = GridPane().apply {
+            rowConstraints.addAll(
+                    RowConstraints(),
+                    RowConstraints().apply {
 
-            children.addAll(gridMenu, canvasPane) // posiciona o componente de desenho
+                        vgrow = Priority.ALWAYS
+                    },
+                    RowConstraints()
+            )
+            columnConstraints.addAll(
+                    ColumnConstraints(),
+                    ColumnConstraints().apply {
+                        hgrow = Priority.ALWAYS
+                    }
+            )
+
+            add(buttons, 0, 1)
+            add(miniWindow, 0, 2)
+            add(canvasPane, 1, 1, 1 , 2)
+            canvasPane.also {
+                val row = GridPane.getRowIndex(it)
+                val column = GridPane.getColumnIndex(it)
+                GridPane.setMargin(it, Insets(0.0, 0.0, 0.0, controller.panePadding))
+
+                it.maxHeightProperty().bind(rowConstraints[row].maxHeightProperty())
+                it.maxWidthProperty().bind(columnConstraints[column].maxWidthProperty())
+            }
+
+
+            add(menuBar, 0, 0, 2, 1)
         }
-        controller.bindCanvasSize(pane)
 
         // cria e insere cena
         val scene = Scene(pane)
         setShortcuts(scene, context)
+        controller.bindCanvasSize(scene)
 
         // define e inicia o stage
         stage.run {
