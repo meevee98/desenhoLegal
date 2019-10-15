@@ -7,13 +7,15 @@ class GraphicRectangle: Form {
     var color: Color = Color.BLACK
     var name = ""
     var width = 1
-    var lines: List<GraphicLine> = listOf()
+    val p1: GraphicPoint
+    val p2: GraphicPoint
 
     constructor(p1: GraphicPoint, p2: GraphicPoint, width: Int? = null, color: Color? = null, name: String? = null) {
         width?.also { this.width = it }
         color?.also { this.color = it }
         name?.also { this.name = it }
-        calculateLines(p1.x.toInt(), p1.y.toInt(), p2.x.toInt(), p2.y.toInt())
+        this.p1 = p1
+        this.p2 = p2
     }
 
 
@@ -21,21 +23,22 @@ class GraphicRectangle: Form {
         width?.also { this.width = it }
         color?.also { this.color = it }
         name?.also { this.name = it }
-        calculateLines(x1, y1, x2, y2)
+        this.p1 = GraphicPoint(x1.toDouble(), y1.toDouble())
+        this.p2 = GraphicPoint(x2.toDouble(), y2.toDouble())
     }
 
-    private fun calculateLines(x1: Int, y1: Int, x2: Int, y2: Int) {
-        lines = listOf(
-                GraphicLine(x1, y1, x1, y2, width, color, name),
-                GraphicLine(x2, y2, x1, y2, width, color, name),
-                GraphicLine(x2, y2, x2, y1, width, color, name),
-                GraphicLine(x1, y1, x2, y1, width, color, name)
+    private fun calculateLines(): List<GraphicLine> {
+        return listOf(
+                GraphicLine(p1.x, p1.y, p1.x, p2.y, width, color, name),
+                GraphicLine(p2.x, p2.y, p1.x, p2.y, width, color, name),
+                GraphicLine(p2.x, p2.y, p2.x, p1.y, width, color, name),
+                GraphicLine(p1.x, p1.y, p2.x, p1.y, width, color, name)
         )
     }
 
 
     override fun draw(gc: GraphicsContext) {
-        lines.forEach { line ->
+        calculateLines().forEach { line ->
             line.draw(gc)
         }
     }

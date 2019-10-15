@@ -95,21 +95,27 @@ class MainWindowController {
 
     fun selectPoint() {
         actualForm = BasicForm.POINT
+        cleanResetDraw()
     }
 
     fun selectLine() {
         actualForm = BasicForm.LINE
-        resetDraw()
+        cleanResetDraw()
     }
 
     fun selectCircle() {
         actualForm = BasicForm.CIRCLE
-        resetDraw()
+        cleanResetDraw()
     }
 
     fun selectRectangle() {
         actualForm = BasicForm.RECTANGLE
-        resetDraw()
+        cleanResetDraw()
+    }
+
+    fun selectPolygon() {
+        actualForm = BasicForm.POLYGON
+        cleanResetDraw()
     }
 
     fun selectLineForm(context: GraphicsContext) {
@@ -135,8 +141,15 @@ class MainWindowController {
     // region DrawOnCanvas
 
     private fun resetDraw() {
-        DrawHandler.reset()
+        val context = canvas.graphicsContext2D
+        DrawHandler.reset(context)
+        FormStorage.redraw(context)
         updateSnapshot()
+    }
+
+    private fun cleanResetDraw() {
+        clearCanvas(canvas.graphicsContext2D)
+        resetDraw()
     }
 
     fun clearCanvas(context: GraphicsContext) {
@@ -170,16 +183,13 @@ class MainWindowController {
     }
 
     fun drawForm(context: GraphicsContext, event: MouseEvent) {
-        // só responde ao clique se foi clicado apenas uma vez
-        if (event.clickCount == 1) {
-            val color = when (event.button) {
-                MouseButton.PRIMARY -> primaryColor.get()
-                MouseButton.SECONDARY -> secondaryColor.get()
-                else -> Constants.DEFAULT_PRIMARY_COLOR
-            }
-
-            DrawHandler.drawForm(context, actualForm, event.x, event.y, drawDiameter, color)
+        val color = when (event.button) {
+            MouseButton.PRIMARY -> primaryColor.get()
+            MouseButton.SECONDARY -> secondaryColor.get()
+            else -> Constants.DEFAULT_PRIMARY_COLOR
         }
+
+        DrawHandler.drawForm(event.clickCount, context, actualForm, event.x, event.y, drawDiameter, color)
         updateSnapshot()
     }
 

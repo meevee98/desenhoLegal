@@ -13,7 +13,7 @@ object FormStorage {
         verifyUndoHistory()
         saveOnHistory()
         forms.add(form)
-        form.draw(gc)
+        redraw(gc)
     }
 
     fun clear() {
@@ -27,7 +27,7 @@ object FormStorage {
         saveOnHistory()
         forms.clear()
         forms.add(form)
-        form.draw(gc)
+        redraw(gc)
     }
 
     fun redraw(gc: GraphicsContext) {
