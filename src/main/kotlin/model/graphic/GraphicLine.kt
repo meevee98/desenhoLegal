@@ -21,7 +21,7 @@ class GraphicLine : Line, Form {
         name?.also { this.name = it }
     }
 
-    constructor(x1: Int, y1: Int, x2: Int, y2: Int, width: Int? = null, color: Color? = null, name: String? = null)
+    constructor(x1: Double, y1: Double, x2: Double, y2: Double, width: Int? = null, color: Color? = null, name: String? = null)
             :super(x1, y1, x2, y2) {
         width?.also { this.width = it }
         color?.also { this.color = it }
@@ -42,7 +42,7 @@ class GraphicLine : Line, Form {
             name: String? = null,
             algorithm: LineAlgorithm = LineAlgorithm.EQUATION
         ) {
-            val line = GraphicLine(x1, y1, x2, y2, width, color, name)
+            val line = GraphicLine(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble(), width, color, name)
             line.drawLine(g, algorithm)
         }
 
@@ -55,7 +55,7 @@ class GraphicLine : Line, Form {
             name: String? = null,
             algorithm: LineAlgorithm = LineAlgorithm.EQUATION
         ) {
-            draw(g, x1.toInt(), y1.toInt(), x2.toInt(), y2.toInt(), width, color, name, algorithm)
+            draw(g, x1, y1, x2, y2, width, color, name, algorithm)
         }
     }
 

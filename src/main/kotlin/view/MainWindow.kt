@@ -109,7 +109,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
             // define largura e altura da janela
             width = 800.0
-            height = 600.0
+            height = 700.0
 
             this.scene = scene
             show()
@@ -150,6 +150,10 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     Button().apply { // desenhar circulos
                         text = "Retângulo"
                         setOnAction { controller.selectRectangle() }
+                    },
+                    Button().apply { // desenhar circulos
+                        text = "Polígono"
+                        setOnAction { controller.selectPolygon() }
                     },
                     Button().apply { // desenhar forma com linhas
                         text = "Outras Formas"
