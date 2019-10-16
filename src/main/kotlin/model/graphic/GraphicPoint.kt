@@ -31,14 +31,7 @@ class GraphicPoint : Point, Form {
                 color: Color? = null,
                 diameter: Int? = null,
                 name: String? = null)
-            : super(x, y) {
-        color?.also {
-            this.pointColor = it
-            this.nameColor = it
-        }
-        name?.also { this.name = it }
-        diameter?.also { this.diameter = it.toDouble() }
-    }
+            : this(x.toDouble(), y.toDouble(), color, diameter, name)
 
     constructor(point: Point) : super(point)
 

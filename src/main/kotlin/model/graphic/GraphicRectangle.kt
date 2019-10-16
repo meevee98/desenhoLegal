@@ -2,6 +2,9 @@ package model.graphic
 
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
+import model.math.Point
+import kotlin.math.max
+import kotlin.math.min
 
 class GraphicRectangle: Form {
     var color: Color = Color.BLACK
@@ -41,5 +44,19 @@ class GraphicRectangle: Form {
         calculateLines().forEach { line ->
             line.draw(gc)
         }
+    }
+
+    fun getMinPoint(): Point {
+        val minX = min(p1.x, p2.x)
+        val minY = min(p1.y, p2.y)
+
+        return Point(minX, minY)
+    }
+
+    fun getMaxPoint(): Point {
+        val maxX = max(p1.x, p2.x)
+        val maxY = max(p1.y, p2.y)
+
+        return Point(maxX, maxY)
     }
 }

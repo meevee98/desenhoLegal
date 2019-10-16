@@ -29,7 +29,6 @@ class GraphicPolygon: Form {
         points.add(p1)
     }
 
-
     override fun draw(gc: GraphicsContext) {
         val lastIndex = points.lastIndex
         points.forEachIndexed { index, p1 ->
