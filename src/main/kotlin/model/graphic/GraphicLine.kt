@@ -190,11 +190,11 @@ class GraphicLine : Line, Form {
             y = y + (max.x - x) * m
             x = max.x
         }
-        if (Clipping.compare(code, Clipping.TOP)) {
+        if (Clipping.compare(code, Clipping.TOP) && y < min.y) {
             x = x + (min.y - y) / m
             y = min.y
         }
-        if (Clipping.compare(code, Clipping.BOTTOM)) {
+        if (Clipping.compare(code, Clipping.BOTTOM) && y > max.y) {
             x = x + (max.y - y) / m
             y = max.y
         }

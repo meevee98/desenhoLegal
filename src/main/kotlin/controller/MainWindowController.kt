@@ -3,6 +3,7 @@ package controller
 import java.lang.Exception
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Rectangle2D
@@ -16,19 +17,25 @@ import javafx.scene.control.TextInputDialog
 import javafx.scene.image.Image
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
-import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
 import model.constants.Constants
 import model.enums.BasicForm
+import model.math.Point
+import kotlin.math.max
+import kotlin.math.min
 
 class MainWindowController {
     // region Attributes
-
     val title = Constants.WINDOW_TITLE
     var actualForm = Constants.DEFAULT_GRAPHIC_FORM
     var drawDiameter: Int = Constants.DEFAULT_DRAW_DIAMETER
     val panePadding: Double = Constants.DEFAULT_PANE_PADDING
+
+    var clipping = SimpleBooleanProperty(false)
+    var clippingActive = SimpleBooleanProperty(false)
+    var clippingMin = SimpleObjectProperty<Point?>()
+    var clippingMax = SimpleObjectProperty<Point?>()
 
     var primaryColor = SimpleObjectProperty(Constants.DEFAULT_PRIMARY_COLOR)
     var secondaryColor = SimpleObjectProperty(Constants.DEFAULT_SECONDARY_COLOR)
@@ -40,12 +47,14 @@ class MainWindowController {
     var borderWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var borderHeight: DoubleProperty = SimpleDoubleProperty(0.0)
 
-    var canvas = Canvas()
+    var mainCanvas = Canvas()
+    var supportCanvas = Canvas()
     val canvasSnapshot = SimpleObjectProperty<Image>()
 
     init {
         canvasWidth.addListener { _ -> updateSnapshot() }
         canvasHeight.addListener { _ -> updateSnapshot() }
+        clipping.addListener { obj -> clippingActive.set((obj as SimpleBooleanProperty).get())}
     }
 
     // endregion
@@ -59,12 +68,12 @@ class MainWindowController {
 
     fun bindCanvasSize(scene: Scene) {
         // inicializa variaveis observables
-        canvas.boundsInParentProperty().addListener { observable, oldValue, newValue ->
+        mainCanvas.boundsInParentProperty().addListener { observable, oldValue, newValue ->
             diffWidth.set(newValue.minX)
             diffHeight.set(newValue.minY)
         }
 
-        canvas.parent.boundsInParentProperty().addListener { observable, oldValue, newValue ->
+        mainCanvas.parent.boundsInParentProperty().addListener { observable, oldValue, newValue ->
             val diffX = newValue.minX - oldValue.minX
             val diffY = newValue.minY - oldValue.minY
             borderWidth.set(borderWidth.doubleValue() + diffX)
@@ -141,14 +150,14 @@ class MainWindowController {
     // region DrawOnCanvas
 
     private fun resetDraw() {
-        val context = canvas.graphicsContext2D
+        val context = mainCanvas.graphicsContext2D
         DrawHandler.reset(context)
         FormStorage.redraw(context)
         updateSnapshot()
     }
 
     private fun cleanResetDraw() {
-        clearCanvas(canvas.graphicsContext2D)
+        clearCanvas(mainCanvas.graphicsContext2D)
         resetDraw()
     }
 
@@ -158,8 +167,8 @@ class MainWindowController {
     }
 
     fun clear(context: GraphicsContext) {
-        clearCanvas(context)
         FormStorage.clear()
+        clearCanvas(context)
     }
 
     fun undo(context: GraphicsContext) {
@@ -178,48 +187,123 @@ class MainWindowController {
         resetDraw()
     }
 
-    fun clip(context: GraphicsContext) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun clip() {
+        if (clipping.get()) {
+            clippingMin.set(null)
+            clippingMax.set(null)
+            cleanResetDraw()
+            clearCanvas(supportCanvas.graphicsContext2D)
+        }
+    }
+
+    fun selectClipArea(event: MouseEvent) {
+        val context = supportCanvas.graphicsContext2D
+        val point = DrawHandler.drawClipArea(context, event.x, event.y)
+
+        if (clippingMin.get() == null) {
+            clippingMin.set(point)
+        }
+        else if (clippingMax.get() == null) {
+            val p2 = clippingMin.get() ?: return
+
+            clippingMax.set(Point(
+                    max(point.x, p2.x),
+                    max(point.y, p2.y)
+            ))
+            clippingMin.set(Point(
+                    min(point.x, p2.x),
+                    min(point.y, p2.y)
+            ))
+
+            clippingActive.set(false)
+            updateSnapshot()
+        }
     }
 
     fun drawForm(context: GraphicsContext, event: MouseEvent) {
-        val color = when (event.button) {
-            MouseButton.PRIMARY -> primaryColor.get()
-            MouseButton.SECONDARY -> secondaryColor.get()
-            else -> Constants.DEFAULT_PRIMARY_COLOR
+        if (clippingActive.get()) {
+            selectClipArea(event)
         }
+        else {
+            val color = when (event.button) {
+                MouseButton.PRIMARY -> primaryColor.get()
+                MouseButton.SECONDARY -> secondaryColor.get()
+                else -> Constants.DEFAULT_PRIMARY_COLOR
+            }
+            val area = clippingMin.get()?.let { min ->
+                clippingMax.get()?.let { max ->
+                    Rectangle2D(min.x, min.y, max.x - min.x, max.y - min.y)
+                }
+            }
 
-        DrawHandler.drawForm(event.clickCount, context, actualForm, event.x, event.y, drawDiameter, color)
-        updateSnapshot()
+            DrawHandler.drawForm(event.clickCount, context, area, actualForm, event.x, event.y, drawDiameter, color)
+            updateSnapshot()
+        }
     }
 
     private fun drawLineForm(context: GraphicsContext, input: String) {
         val divisions = input.toIntOrNull()
+        val minX = clippingMin.get()?.x ?: 0.0
+        val minY = clippingMin.get()?.y ?: 0.0
+        val maxX = clippingMax.get()?.x ?: canvasWidth.get()
+        val maxY = clippingMax.get()?.y ?: canvasHeight.get()
+        val clipping = clipping.get()
 
         if (divisions != null && divisions > 0) {
-            clearCanvas(context)
             DrawHandler.drawLineForm(
                     context,
-                    canvasWidth.get(),
-                    canvasHeight.get(),
+                    minX, minY,
+                    maxX, maxY,
                     divisions,
                     Constants.HAIRLINE,
-                    primaryColor.get()
+                    primaryColor.get(),
+                    clipping
             )
+            if (clipping) {
+                cleanResetDraw()
+            }
+            else {
+                clearCanvas(context)
+            }
         }
         updateSnapshot()
     }
 
     fun updateSnapshot() {
         try {
-            val params = SnapshotParameters().apply {
-                viewport = Rectangle2D(diffWidth.value, diffHeight.value, canvasWidth.value, canvasHeight.value)
+            var minX = diffWidth.get()
+            var minY = diffHeight.get()
+            var maxX = canvasWidth.get()
+            var maxY = canvasHeight.get()
+
+            if (clippingMax.get() != null) {
+                val clipMinX = min(maxX, clippingMin.get()?.x ?: 0.0)
+                val clipMinY = min(maxY, clippingMin.get()?.y ?: 0.0)
+                val clipMaxX = clippingMax.get()?.x ?: canvasWidth.get()
+                val clipMaxY = clippingMax.get()?.y ?: canvasHeight.get()
+
+                val width = min(maxX, clipMaxX) - clipMinX
+                val height = min(maxY, clipMaxY) - clipMinY
+
+                minX = min(maxX, clipMinX)
+                minY = min(maxY, clipMinY)
+                maxX = min(maxX, width)
+                maxY = min(maxY, height)
             }
-            canvasSnapshot.value = canvas.snapshot(params, null)
+
+            val snapshot = if (maxX == 0.0 || maxY == 0.0) {
+                null // só acontece quando a área do clip não está visivel, nesse caso a viewport fica vazia
+            }
+            else {
+                val params = SnapshotParameters().apply {
+                    viewport = Rectangle2D(minX, minY, maxX, maxY)
+                }
+                mainCanvas.snapshot(params, null)
+            }
+            canvasSnapshot.set(snapshot)
         }
         catch (e: Exception) {
             // essa exceção só acontece na inicialização, antes de disparar a scene
-            // ignorar por enquanto
         }
 
     }

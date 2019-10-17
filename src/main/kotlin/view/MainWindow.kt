@@ -2,14 +2,10 @@ package view
 
 import controller.MainWindowController
 import javafx.geometry.Insets
-import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
-import javafx.scene.control.Button
-import javafx.scene.control.ColorPicker
-import javafx.scene.control.Menu
-import javafx.scene.control.MenuBar
+import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
@@ -28,17 +24,16 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             width = Constants.CANVAS_WIDTH
             height = Constants.CANVAS_HEIGHT
         }
+        val supportCanvas = Canvas().apply {
+            width = Constants.CANVAS_WIDTH
+            height = Constants.CANVAS_HEIGHT
+        }
 
         // componente para desenhar graficos
         val context = canvas.graphicsContext2D
 
         // componente para os botões
         val buttons = includeButtons(context)
-        
-        // Eventos de mouse
-        canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
-        canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
-        canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
 
         val canvasPane = Pane().apply {
             border = Border(BorderStroke(
@@ -47,9 +42,14 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     CornerRadii.EMPTY,
                     BorderWidths(0.0, 0.0, 0.0, 2.0)
             ))
-            children.add(canvas)
+            children.addAll(canvas, supportCanvas)
+            supportCanvas.toFront()
         }
-        controller.canvas = canvas
+        controller.mainCanvas = canvas
+        controller.supportCanvas = supportCanvas
+
+        // Eventos de mouse
+        handleMouseEvents(canvasPane, stage, context)
 
         val miniWindow = ImageView().apply {
             fitWidth = 200.0
@@ -149,14 +149,17 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     },
                     Button().apply { // desenhar circulos
                         text = "Retângulo"
+                        disableProperty().bind(controller.clipping)
                         setOnAction { controller.selectRectangle() }
                     },
                     Button().apply { // desenhar circulos
                         text = "Polígono"
+                        disableProperty().bind(controller.clipping)
                         setOnAction { controller.selectPolygon() }
                     },
                     Button().apply { // desenhar forma com linhas
                         text = "Outras Formas"
+                        disableProperty().bind(controller.clippingActive)
                         setOnAction { controller.selectLineForm(context) }
                     },
                     Button().apply { // limpar canvas
@@ -171,13 +174,19 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                         text = "Refazer"
                         setOnAction { controller.redo(context) }
                     },
-                    Button().apply { // clipping do canvas
+                    CheckBox().apply { // clipping do canvas
                         text = "Clip"
-                        isDisable = true
-                        setOnAction { controller.clip(context) }
+                        selectedProperty().bindBidirectional(controller.clipping)
+                        selectedProperty().addListener { _ -> controller.clip() }
                     }
             )
         }
+    }
+
+    private fun handleMouseEvents(canvas: Pane, stage: Stage, context: GraphicsContext) {
+        canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
+        canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
+        canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
     }
 
     private fun setShortcuts(scene: Scene, context: GraphicsContext) {

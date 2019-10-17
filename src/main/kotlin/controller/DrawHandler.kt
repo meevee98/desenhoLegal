@@ -3,16 +3,21 @@ package controller
 import javafx.geometry.Rectangle2D
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
+import javafx.scene.shape.Rectangle
+import javafx.scene.shape.Shape
+import model.constants.Constants
 import model.enums.BasicForm
 import model.graphic.*
 import model.graphic.form.LineForm
+import kotlin.math.abs
+import kotlin.math.min
 
 object DrawHandler {
     private var firstPoint: GraphicPoint? = null
     private var firstColor: Color = Color.WHITE
     private var polygon: GraphicPolygon? = null
 
-    fun drawForm(clickCount: Int, g: GraphicsContext, form: BasicForm, x: Double, y: Double, diameter: Int, color: Color? = null, name: String? = null, clippingArea: Rectangle2D? = null) {
+    fun drawForm(clickCount: Int, g: GraphicsContext, clippingArea: Rectangle2D? = null, form: BasicForm, x: Double, y: Double, diameter: Int, color: Color? = null, name: String? = null) {
         when (form) {
             BasicForm.POINT -> drawPoint(g, x, y, diameter, formatName(form, name), color, clippingArea)
             BasicForm.LINE -> drawLine(clickCount, g, x, y, diameter, formatName(form, name), color, clippingArea)
@@ -23,9 +28,48 @@ object DrawHandler {
         }
     }
 
-    fun drawLineForm(g: GraphicsContext, x: Double, y: Double, divisions: Int, diameter: Int, color: Color?) {
-        val lineForm = LineForm(x, y, divisions, diameter, color)
-        FormStorage.drawClear(lineForm, g)
+    fun drawLineForm(g: GraphicsContext, minX: Double, minY: Double, maxX: Double, maxY: Double, divisions: Int, diameter: Int, color: Color?, clipping: Boolean) {
+        val lineForm = LineForm(minX, minY, maxX, maxY, divisions, diameter, color)
+
+        if (!clipping) {
+            FormStorage.drawClear(lineForm, g)
+        }
+        else {
+            FormStorage.draw(lineForm, g)
+        }
+    }
+
+    fun drawClipArea(g: GraphicsContext, x: Double, y: Double): GraphicPoint {
+        val newPoint = GraphicPoint(x, y)
+        val p1 = firstPoint ?: newPoint
+
+        if (firstPoint == null) {
+            // se firstPoint == null, define o novo ponto como o ponto inicial da reta
+            firstPoint = newPoint
+        }
+        else {
+            shapeClipRect(g, p1, x, y)
+            firstPoint = null
+        }
+
+        return newPoint
+    }
+
+    private fun shapeClipRect(context: GraphicsContext, p: GraphicPoint, x: Double, y: Double) {
+        val hTotal = context.canvas.height
+        val wTotal = context.canvas.width
+
+        val wClipped = abs(p.x - x)
+        val hClipped = abs(p.y - y)
+
+        val minX = min(p.x, x)
+        val minY = min(p.y, y)
+
+        context.fill = Constants.DEFAULT_SELECTION_COLOR
+                .deriveColor(1.0, 1.0, 1.0, 0.8) // opacidade em 80%
+                // as alterações são em porcentagem // 1.0 -> não alterar
+        context.fillRect(0.0, 0.0, wTotal, hTotal)
+        context.clearRect(minX, minY, wClipped, hClipped)
     }
 
     fun reset(g: GraphicsContext) {
@@ -79,6 +123,9 @@ object DrawHandler {
                 // se firstPoint == null, define o novo ponto como o ponto inicial da reta
                 firstPoint = newPoint
                 firstColor = newPoint.pointColor
+                if (clip != null && !isInsideClipping(newPoint, clip)) {
+                    return
+                }
                 newPoint.drawPoint(g)
             } else {
                 // se o firstPoint não for null, traça uma reta entre o firstPoint e o novo ponto
@@ -94,11 +141,13 @@ object DrawHandler {
         }
     }
 
-    private fun clipLine(p1: GraphicPoint, p2: GraphicPoint, diameter: Int, name: String?, color: Color? = null, clip: Rectangle2D): GraphicLine {
+    private fun clipLine(p1: GraphicPoint, p2: GraphicPoint, diameter: Int, name: String?, color: Color? = null, clipArea: Rectangle2D): GraphicLine {
         val line = GraphicLine(p1, p2, diameter, firstColor, name)
 
-        val min = GraphicPoint(clip.minX, clip.minY)
-        val max = GraphicPoint(clip.maxX, clip.maxY)
+        val min = GraphicPoint(clipArea.minX, clipArea.minY)
+        val max = GraphicPoint(clipArea.maxX, clipArea.maxY)
+
+        line.clip(GraphicRectangle(min, max))
 
         return line
     }
@@ -154,11 +203,10 @@ object DrawHandler {
                 newPoint.drawPoint(g)
             }
             else {
-                // se o firstPoint não for null, traça uma reta entre o firstPoint e o novo ponto
-                val line = GraphicRectangle(p1, GraphicPoint(x, y), diameter, firstColor, name)
-                FormStorage.draw(line, g)
+                val rectangle = GraphicRectangle(p1, GraphicPoint(x, y), diameter, firstColor, name)
+                FormStorage.draw(rectangle, g)
 
-                // retorna o firstPoint para null para que não seja traçada um reta entre este e o próximo ponto
+                // retorna o firstPoint para null para que não seja traçada um retangulo entre este e o próximo ponto
                 firstPoint = null
             }
         }

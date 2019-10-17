@@ -24,7 +24,7 @@ object Clipping {
             p.x < minX -> LEFT
             p.x > maxX -> RIGHT
             p.y < minY -> TOP
-            p.y > maxX -> BOTTOM
+            p.y > maxY -> BOTTOM
             else -> CENTER
         }
     }
