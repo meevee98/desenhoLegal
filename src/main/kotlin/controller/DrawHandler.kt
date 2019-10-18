@@ -3,8 +3,6 @@ package controller
 import javafx.geometry.Rectangle2D
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
-import javafx.scene.shape.Rectangle
-import javafx.scene.shape.Shape
 import model.constants.Constants
 import model.enums.BasicForm
 import model.graphic.*
@@ -130,10 +128,16 @@ object DrawHandler {
             } else {
                 // se o firstPoint não for null, traça uma reta entre o firstPoint e o novo ponto
                 val p2 = GraphicPoint(x, y)
-                val line = clip?.let { area ->
-                    clipLine(p1, p2, diameter, name, firstColor, area)
-                } ?: GraphicLine(p1, p2, diameter, firstColor, name)
-                FormStorage.draw(line, g)
+                val line = if (clip != null) {
+                    clipLine(p1, p2, diameter, name, firstColor, clip)
+                }
+                else {
+                    GraphicLine(p1, p2, diameter, firstColor, name)
+                }
+
+                line?.let {
+                    FormStorage.draw(it, g)
+                }
 
                 // retorna o firstPoint para null para que não seja traçada um reta entre este e o próximo ponto
                 firstPoint = null
@@ -141,15 +145,17 @@ object DrawHandler {
         }
     }
 
-    private fun clipLine(p1: GraphicPoint, p2: GraphicPoint, diameter: Int, name: String?, color: Color? = null, clipArea: Rectangle2D): GraphicLine {
+    private fun clipLine(p1: GraphicPoint, p2: GraphicPoint, diameter: Int, name: String?, color: Color? = null, clipArea: Rectangle2D): GraphicLine? {
         val line = GraphicLine(p1, p2, diameter, firstColor, name)
 
         val min = GraphicPoint(clipArea.minX, clipArea.minY)
         val max = GraphicPoint(clipArea.maxX, clipArea.maxY)
 
-        line.clip(GraphicRectangle(min, max))
+        if (line.clip(GraphicRectangle(min, max))) {
+            return line
+        }
 
-        return line
+        return null
     }
 
     // endregion
