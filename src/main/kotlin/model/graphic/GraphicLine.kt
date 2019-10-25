@@ -2,12 +2,13 @@ package model.graphic
 
 import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
+import model.enums.Clipping
 import kotlin.math.*
 import model.enums.LineAlgorithm
 import model.math.Line
+import model.math.Point
 
 class GraphicLine : Line, Form {
-    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
     var width = 1
@@ -94,8 +95,8 @@ class GraphicLine : Line, Form {
 
             for (x in minX..maxX) {
                 GraphicPoint(
-                    x.toDouble(),
-                    Line.calculateY(x.toDouble(), b, m),
+                    x,
+                    calculateY(x.toDouble(), b, m).toInt(),
                     color,
                     width
                 ).drawPoint(g)
@@ -108,8 +109,8 @@ class GraphicLine : Line, Form {
 
             for (y in minY..maxY) {
                 GraphicPoint(
-                    p1.x,
-                    y.toDouble(),
+                    p1.x.toInt(),
+                    y,
                     color,
                     width
                 ).drawPoint(g)
@@ -123,8 +124,8 @@ class GraphicLine : Line, Form {
             for (y in minY..maxY) {
                 val x = Line.calculateX(y.toDouble(), b, m)
                 GraphicPoint(
-                    x,
-                    y.toDouble(),
+                    x.toInt(),
+                    y,
                     color,
                     width
                 ).drawPoint(g)
@@ -147,6 +148,59 @@ class GraphicLine : Line, Form {
     private fun drawLineGraphicsContext(g: GraphicsContext) {
         // TODO
     }
-    
+
+    // endregion
+
+    // region CLIP LINE
+
+    fun clip(rectangle: GraphicRectangle): Boolean {
+        val min = rectangle.getMinPoint()
+        val max = rectangle.getMaxPoint()
+
+        val codeP1 = Clipping.classify(p1, min.x, min.y, max.x, max.y)
+        val codeP2 = Clipping.classify(p2, min.x, min.y, max.x, max.y)
+
+        if (Clipping.compare(codeP1, codeP2)) {
+            return false
+        }
+        if ((codeP1 == Clipping.CENTER && codeP2 == Clipping.CENTER)) {
+            return true
+        }
+
+        p1 = clipPoint(p1, codeP1, min, max)
+        p2 = clipPoint(p2, codeP2, min, max)
+
+        return true
+    }
+
+    private fun clipPoint(p: Point, code: Int, min: Point, max: Point): Point {
+        var x = p.x
+        var y = p.y
+        val m = calculateSlope()
+
+        if (code == Clipping.CENTER) {
+            return p
+        }
+
+        if (Clipping.compare(code, Clipping.LEFT)) {
+            y = y + (min.x - x) * m
+            x = min.x
+        }
+        if (Clipping.compare(code, Clipping.RIGHT)) {
+            y = y + (max.x - x) * m
+            x = max.x
+        }
+        if (Clipping.compare(code, Clipping.TOP) && y < min.y) {
+            x = x + (min.y - y) / m
+            y = min.y
+        }
+        if (Clipping.compare(code, Clipping.BOTTOM) && y > max.y) {
+            x = x + (max.y - y) / m
+            y = max.y
+        }
+
+        return Point(x, y)
+    }
+
     // endregion
 }

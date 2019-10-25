@@ -7,7 +7,6 @@ import model.math.Circle
 import java.lang.Math.PI
 
 class GraphicCircle : Circle, Form {
-    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
     var width = 1
@@ -81,14 +80,23 @@ class GraphicCircle : Circle, Form {
         for (x in 0..x1) {
             val y = calculateY(x.toDouble(), radius)
 
-            GraphicPoint(center.x + x, center.y + y, color, width).drawPoint(g)
-            GraphicPoint(center.x + y, center.y + x, color, width).drawPoint(g)
-            GraphicPoint(center.x + x, center.y - y, color, width).drawPoint(g)
-            GraphicPoint(center.x + y, center.y - x, color, width).drawPoint(g)
-            GraphicPoint(center.x - x, center.y + y, color, width).drawPoint(g)
-            GraphicPoint(center.x - y, center.y + x, color, width).drawPoint(g)
-            GraphicPoint(center.x - x, center.y - y, color, width).drawPoint(g)
-            GraphicPoint(center.x - y, center.y - x, color, width).drawPoint(g)
+            val cXaddX = (center.x + x).toInt()
+            val cXaddY = (center.x + y).toInt()
+            val cYaddX = (center.y + x).toInt()
+            val cYaddY = (center.y + y).toInt()
+            val cXsubX = (center.x - x).toInt()
+            val cXsubY = (center.x - y).toInt()
+            val cYsubX = (center.y - x).toInt()
+            val cYsubY = (center.y - y).toInt()
+
+            GraphicPoint(cXaddX, cYaddY, color, width).drawPoint(g)
+            GraphicPoint(cXaddY, cYaddX, color, width).drawPoint(g)
+            GraphicPoint(cXaddX, cYsubY, color, width).drawPoint(g)
+            GraphicPoint(cXaddY, cYsubX, color, width).drawPoint(g)
+            GraphicPoint(cXsubX, cYaddY, color, width).drawPoint(g)
+            GraphicPoint(cXsubY, cYaddX, color, width).drawPoint(g)
+            GraphicPoint(cXsubX, cYsubY, color, width).drawPoint(g)
+            GraphicPoint(cXsubY, cYsubX, color, width).drawPoint(g)
         }
 
 

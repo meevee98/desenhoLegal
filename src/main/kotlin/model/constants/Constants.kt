@@ -24,6 +24,7 @@ object Constants {
     // region Color
     val DEFAULT_PRIMARY_COLOR: Color = Color.BLACK
     val DEFAULT_SECONDARY_COLOR: Color = Color.WHITE
+    val DEFAULT_SELECTION_COLOR: Color = Color.DODGERBLUE
     val DEFAULT_BACKGROUND_COLOR: Color = Color.WHITE
     val DEFAULT_SEPARATOR_COLOR: Color = Color.GAINSBORO
     // endregion

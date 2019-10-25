@@ -9,8 +9,8 @@ package model.math
  */
 open class Line {
 
-    val p1: Point
-    val p2: Point
+    var p1: Point
+    var p2: Point
 
     // region CONSTRUCTORS
 

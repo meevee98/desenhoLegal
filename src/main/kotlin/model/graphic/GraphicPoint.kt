@@ -5,7 +5,6 @@ import javafx.scene.canvas.GraphicsContext
 import model.math.Point
 
 class GraphicPoint : Point, Form {
-    //TODO: change javafx to TornadoFX
     var pointColor: Color = Color.BLACK
     var nameColor: Color = Color.BLACK
     var name = ""
@@ -26,6 +25,13 @@ class GraphicPoint : Point, Form {
         name?.also { this.name = it }
         diameter?.also { this.diameter = it.toDouble() }
     }
+
+    constructor(x: Int,
+                y: Int,
+                color: Color? = null,
+                diameter: Int? = null,
+                name: String? = null)
+            : this(x.toDouble(), y.toDouble(), color, diameter, name)
 
     constructor(point: Point) : super(point)
 
