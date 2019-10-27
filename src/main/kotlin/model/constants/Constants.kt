@@ -7,6 +7,8 @@ object Constants {
     // region String
     const val WINDOW_TITLE = "Bora Desenhar"
     const val INVALID_INPUT = "Entrada inválida"
+    const val OPEN_FILE_ERROR = "Erro ao abrir"
+    const val SAVE_FILE_ERROR = "Erro ao salvar"
     // endregion
 
     // region Dimension

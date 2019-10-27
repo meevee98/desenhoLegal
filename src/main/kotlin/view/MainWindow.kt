@@ -2,7 +2,6 @@ package view
 
 import controller.MainWindowController
 import javafx.geometry.Insets
-import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
@@ -76,7 +75,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             }
         }
 
-        val menuBar = includeMenu()
+        val menuBar = includeMenu(stage)
 
         // Painel para os componentes
         val pane = GridPane().apply {
@@ -106,7 +105,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                 it.maxWidthProperty().bind(columnConstraints[column].maxWidthProperty())
             }
             miniWindow.also {
-                GridPane.setMargin(it, Insets(0.0, 0.0, 0.0, controller.panePadding))
+                GridPane.setMargin(it, Insets(0.0, 0.0, controller.panePadding, controller.panePadding))
             }
 
 
@@ -115,7 +114,6 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
         // cria e insere cena
         val scene = Scene(pane)
-        setShortcuts(scene, context)
         controller.bindCanvasSize(scene)
 
         // define e inicia o stage
@@ -128,6 +126,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             height = 700.0
 
             this.scene = scene
+            setShortcuts(this, context)
             show()
         }
     }
@@ -158,7 +157,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                         setOnAction { value?.let { controller.selectForm(it) } }
                     },
                     Button().apply { // desenhar forma com linhas
-                        text = "Outras Formas"
+                        text = "Curva com retas"
                         disableProperty().bind(controller.clippingActive)
                         setOnAction { controller.selectLineForm(context) }
                     },
@@ -183,16 +182,16 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         }
     }
 
-    private fun includeMenu(): MenuBar {
+    private fun includeMenu(stage: Stage): MenuBar {
         return MenuBar().apply {
             menus.addAll(
                     Menu("Arquivo").apply {
                         items.addAll(
-                                MenuItem("Abrir").apply {
-                                    isDisable = true
+                                MenuItem("Abrir (Ctrl + O)").apply {
+                                    setOnAction { controller.openFigureFromFile(stage) }
                                 },
-                                MenuItem("Salvar").apply {
-                                    isDisable = true
+                                MenuItem("Salvar (Ctrl + S)").apply {
+                                    setOnAction { controller.saveFigureOnFile(stage) }
                                 }
                         )
                     }
@@ -206,14 +205,16 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
     }
 
-    private fun setShortcuts(scene: Scene, context: GraphicsContext) {
+    private fun setShortcuts(stage: Stage, context: GraphicsContext) {
         val shortcuts = mapOf(
+                KeyCombination.valueOf("Ctrl+O") to Runnable { controller.openFigureFromFile(stage) },
+                KeyCombination.valueOf("Ctrl+S") to Runnable { controller.saveFigureOnFile(stage) },
                 KeyCombination.valueOf("Ctrl+Z") to Runnable { controller.undo(context) },
                 KeyCombination.valueOf("Ctrl+Y") to Runnable { controller.redo(context) },
                 KeyCombination.valueOf("Ctrl+Shift+Z") to Runnable { controller.redo(context) },
                 KeyCombination.valueOf("Ctrl+Delete") to Runnable { controller.clear(context) }
         )
 
-        scene.accelerators.putAll(shortcuts)
+        stage.scene.accelerators.putAll(shortcuts)
     }
 }
