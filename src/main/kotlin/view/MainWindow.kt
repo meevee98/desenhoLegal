@@ -2,6 +2,7 @@ package view
 
 import controller.MainWindowController
 import javafx.geometry.Insets
+import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
@@ -11,6 +12,7 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.stage.Stage
 import model.constants.Constants
+import model.enums.BasicForm
 
 class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
@@ -42,6 +44,11 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     CornerRadii.EMPTY,
                     BorderWidths(0.0, 0.0, 0.0, 2.0)
             ))
+            background = Background(BackgroundFill(
+                    Constants.DEFAULT_BACKGROUND_COLOR,
+                    CornerRadii.EMPTY,
+                    Insets.EMPTY
+            ))
             children.addAll(canvas, supportCanvas)
             supportCanvas.toFront()
         }
@@ -51,25 +58,31 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         // Eventos de mouse
         handleMouseEvents(canvasPane, stage, context)
 
-        val miniWindow = ImageView().apply {
-            fitWidth = 200.0
-            fitHeight = 200.0
-            imageProperty().bind(controller.canvasSnapshot)
-            isPreserveRatio = true
+        val miniWindow = BorderPane().apply {
+            setPrefSize(200.0, 200.0)
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_SEPARATOR_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(2.0)
+            ))
+
+
+            center = ImageView().apply {
+                fitWidth = 200.0
+                fitHeight = 200.0
+                imageProperty().bind(controller.canvasSnapshot)
+                isPreserveRatio = true
+            }
         }
 
-        val menuBar = MenuBar().apply {
-            menus.addAll(
-                    Menu("Salvar")
-            )
-        }
+        val menuBar = includeMenu()
 
         // Painel para os componentes
         val pane = GridPane().apply {
             rowConstraints.addAll(
                     RowConstraints(),
                     RowConstraints().apply {
-
                         vgrow = Priority.ALWAYS
                     },
                     RowConstraints()
@@ -91,6 +104,9 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
                 it.maxHeightProperty().bind(rowConstraints[row].maxHeightProperty())
                 it.maxWidthProperty().bind(columnConstraints[column].maxWidthProperty())
+            }
+            miniWindow.also {
+                GridPane.setMargin(it, Insets(0.0, 0.0, 0.0, controller.panePadding))
             }
 
 
@@ -135,27 +151,11 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             minWidth = 200.0
             children.addAll(
                     colors,
-                    Button().apply { // desenhar pontos
-                        text = "Ponto"
-                        setOnAction { controller.selectPoint() }
-                    },
-                    Button().apply { // desenhar linhas
-                        text = "Reta"
-                        setOnAction { controller.selectLine() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Círculo"
-                        setOnAction { controller.selectCircle() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Retângulo"
-                        disableProperty().bind(controller.clipping)
-                        setOnAction { controller.selectRectangle() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Polígono"
-                        disableProperty().bind(controller.clipping)
-                        setOnAction { controller.selectPolygon() }
+                    ComboBox<BasicForm>().apply {
+                        itemsProperty().bind(controller.availableForms)
+                        valueProperty().bindBidirectional(controller.selectedForm)
+
+                        setOnAction { value?.let { controller.selectForm(it) } }
                     },
                     Button().apply { // desenhar forma com linhas
                         text = "Outras Formas"
@@ -178,6 +178,23 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                         text = "Clip"
                         selectedProperty().bindBidirectional(controller.clipping)
                         selectedProperty().addListener { _ -> controller.clip() }
+                    }
+            )
+        }
+    }
+
+    private fun includeMenu(): MenuBar {
+        return MenuBar().apply {
+            menus.addAll(
+                    Menu("Arquivo").apply {
+                        items.addAll(
+                                MenuItem("Abrir").apply {
+                                    isDisable = true
+                                },
+                                MenuItem("Salvar").apply {
+                                    isDisable = true
+                                }
+                        )
                     }
             )
         }

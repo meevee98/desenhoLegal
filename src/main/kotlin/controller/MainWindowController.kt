@@ -1,11 +1,8 @@
 package controller
 
+import javafx.beans.property.*
+import javafx.collections.FXCollections
 import java.lang.Exception
-import javafx.beans.property.DoubleProperty
-import javafx.beans.property.ObjectProperty
-import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleDoubleProperty
-import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
 import javafx.scene.SnapshotParameters
@@ -40,6 +37,9 @@ class MainWindowController {
     var primaryColor = SimpleObjectProperty(Constants.DEFAULT_PRIMARY_COLOR)
     var secondaryColor = SimpleObjectProperty(Constants.DEFAULT_SECONDARY_COLOR)
 
+    val availableForms = SimpleListProperty<BasicForm>()
+    val selectedForm = SimpleObjectProperty<BasicForm>()
+
     var canvasWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var canvasHeight: DoubleProperty = SimpleDoubleProperty(0.0)
     var diffWidth: DoubleProperty = SimpleDoubleProperty(0.0)
@@ -55,6 +55,9 @@ class MainWindowController {
         canvasWidth.addListener { _ -> updateSnapshot() }
         canvasHeight.addListener { _ -> updateSnapshot() }
         clipping.addListener { obj -> clippingActive.set((obj as SimpleBooleanProperty).get())}
+
+        availableForms.set(FXCollections.observableArrayList(BasicForm.values().toList()))
+        selectedForm.set(availableForms.firstOrNull())
     }
 
     // endregion
@@ -90,7 +93,7 @@ class MainWindowController {
     // region UpdateMainWindow
 
     fun updateWindowTitleWithCoordinates(window: Stage, event: MouseEvent) {
-        val point = "(${event.x}, ${event.y})"
+        val point = "(${event.x.toInt()}, ${event.y.toInt()})"
         window.title = "$title $point"
     }
 
@@ -102,28 +105,10 @@ class MainWindowController {
 
     // region SelectForm
 
-    fun selectPoint() {
-        actualForm = BasicForm.POINT
-        cleanResetDraw()
-    }
+    fun selectForm(form: BasicForm) {
+        actualForm = form
+        selectedForm.set(form)
 
-    fun selectLine() {
-        actualForm = BasicForm.LINE
-        cleanResetDraw()
-    }
-
-    fun selectCircle() {
-        actualForm = BasicForm.CIRCLE
-        cleanResetDraw()
-    }
-
-    fun selectRectangle() {
-        actualForm = BasicForm.RECTANGLE
-        cleanResetDraw()
-    }
-
-    fun selectPolygon() {
-        actualForm = BasicForm.POLYGON
         cleanResetDraw()
     }
 
@@ -176,6 +161,7 @@ class MainWindowController {
             clearCanvas(context)
             FormStorage.redraw(context)
         }
+
         resetDraw()
     }
 
@@ -193,6 +179,29 @@ class MainWindowController {
             clippingMax.set(null)
             cleanResetDraw()
             clearCanvas(supportCanvas.graphicsContext2D)
+
+
+            updateAvailableForms(BasicForm.values().asList())
+        }
+        else {
+            val forms = listOf(
+                    BasicForm.POINT,
+                    BasicForm.LINE,
+                    BasicForm.CIRCLE
+            )
+            updateAvailableForms(forms)
+        }
+    }
+
+    fun updateAvailableForms(forms: List<BasicForm>) {
+        availableForms.clear()
+        availableForms.addAll(forms)
+
+        if (!forms.contains(actualForm)) {
+            selectedForm.set(BasicForm.LINE)
+        }
+        else {
+            selectedForm.set(actualForm)
         }
     }
 
