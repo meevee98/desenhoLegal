@@ -2,11 +2,13 @@ package model.graphic
 
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
+import model.constants.Constants
+import model.math.Point
 
 class GraphicPolygon: Form {
     var color: Color = Color.BLACK
     var name = ""
-    var width = 1
+    var width = Constants.DEFAULT_DRAW_DIAMETER
     var points: MutableList<GraphicPoint> = mutableListOf()
 
     constructor(width: Int? = null, color: Color? = null, name: String? = null) {
@@ -42,5 +44,13 @@ class GraphicPolygon: Form {
 
             GraphicLine(p1, p2, width, color).draw(gc)
         }
+    }
+
+    override fun normalize(min: Point, max: Point): GraphicPolygon {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

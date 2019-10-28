@@ -2,14 +2,16 @@ package model.graphic
 
 import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
+import model.constants.Constants
 import model.enums.CircleAlgorithm
 import model.math.Circle
+import model.math.Point
 import java.lang.Math.PI
 
 class GraphicCircle : Circle, Form {
     var color: Color = Color.BLACK
     var name = ""
-    var width = 1
+    var width = Constants.DEFAULT_DRAW_DIAMETER
 
     // region CONSTRUCTORS
 
@@ -70,6 +72,22 @@ class GraphicCircle : Circle, Form {
 
     override fun draw(gc: GraphicsContext) {
         drawCircle(gc)
+    }
+
+    override fun normalize(min: Point, max: Point): GraphicCircle {
+        val cx = (center.x - min.x) / (max.x - min.x)
+        val cy = (center.y - min.y) / (max.y - min.y)
+        val nRadius = (radius - min.x) / (max.x - min.x)
+
+        return GraphicCircle(GraphicPoint(cx, cy), nRadius, color=color)
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        val cx = center.x * (max.x - min.x) + min.x
+        val cy = center.y * (max.y - min.y) + min.y
+
+        radius = radius * (max.x - min.x) + min.x
+        center = Point(cx, cy)
     }
 
     // region DRAW CIRCLE ALGORITHMS

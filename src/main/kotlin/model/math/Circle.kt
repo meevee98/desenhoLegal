@@ -10,8 +10,8 @@ import kotlin.math.*
  */
 open class Circle {
 
-    val center: Point
-    val radius: Double
+    var center: Point
+    var radius: Double
 
     // region CONSTRUCTORS
 

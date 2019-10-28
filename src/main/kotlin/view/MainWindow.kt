@@ -66,7 +66,6 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     BorderWidths(2.0)
             ))
 
-
             center = ImageView().apply {
                 fitWidth = 200.0
                 fitHeight = 200.0

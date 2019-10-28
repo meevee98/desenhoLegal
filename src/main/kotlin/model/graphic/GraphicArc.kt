@@ -2,7 +2,9 @@ package model.graphic
 
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
+import model.constants.Constants
 import model.math.Circle
+import model.math.Point
 
 class GraphicArc (
         center: GraphicPoint,
@@ -15,7 +17,7 @@ class GraphicArc (
 ): Form, Circle(center, radius) {
     var color: Color = Color.BLACK
     var name = ""
-    var width = 1
+    var width = Constants.DEFAULT_DRAW_DIAMETER
 
     // region CONSTRUCTORS
 
@@ -44,6 +46,14 @@ class GraphicArc (
 
     override fun draw(gc: GraphicsContext) {
         drawArc(gc)
+    }
+
+    override fun normalize(min: Point, max: Point): GraphicArc {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     fun drawArc(gc: GraphicsContext) {

@@ -21,6 +21,7 @@ import model.constants.Constants
 import model.enums.BasicForm
 import model.math.Point
 import util.FileHelper
+import util.JsonHelper
 import kotlin.math.max
 import kotlin.math.min
 
@@ -374,6 +375,23 @@ class MainWindowController {
             contentText = dialogContent
             showAndWait()
         }
+    }
+
+    fun openJson() {
+        val figure = JsonHelper().readFigureFromJson(
+                Point(diffWidth.get(), diffHeight.get()),
+                Point(canvasWidth.get(), canvasWidth.get())
+        )
+        FormStorage.draw(figure, mainCanvas.graphicsContext2D)
+        updateSnapshot()
+    }
+
+    fun saveJson() {
+        JsonHelper().saveFigureAsJson(
+                FormStorage.forms,
+                Point(diffWidth.get(), diffHeight.get()),
+                Point(canvasWidth.get(), canvasWidth.get())
+        )
     }
 
     // endregion
