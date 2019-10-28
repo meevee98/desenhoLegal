@@ -1,11 +1,8 @@
 package controller
 
+import javafx.beans.property.*
+import javafx.collections.FXCollections
 import java.lang.Exception
-import javafx.beans.property.DoubleProperty
-import javafx.beans.property.ObjectProperty
-import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleDoubleProperty
-import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
 import javafx.scene.SnapshotParameters
@@ -18,10 +15,12 @@ import javafx.scene.image.Image
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.paint.Color
+import javafx.stage.FileChooser
 import javafx.stage.Stage
 import model.constants.Constants
 import model.enums.BasicForm
 import model.math.Point
+import util.FileHelper
 import kotlin.math.max
 import kotlin.math.min
 
@@ -32,6 +31,8 @@ class MainWindowController {
     var drawDiameter: Int = Constants.DEFAULT_DRAW_DIAMETER
     val panePadding: Double = Constants.DEFAULT_PANE_PADDING
 
+    val fileChooser = FileChooser()
+
     var clipping = SimpleBooleanProperty(false)
     var clippingActive = SimpleBooleanProperty(false)
     var clippingMin = SimpleObjectProperty<Point?>()
@@ -39,6 +40,9 @@ class MainWindowController {
 
     var primaryColor = SimpleObjectProperty(Constants.DEFAULT_PRIMARY_COLOR)
     var secondaryColor = SimpleObjectProperty(Constants.DEFAULT_SECONDARY_COLOR)
+
+    val availableForms = SimpleListProperty<BasicForm>()
+    val selectedForm = SimpleObjectProperty<BasicForm>()
 
     var canvasWidth: DoubleProperty = SimpleDoubleProperty(0.0)
     var canvasHeight: DoubleProperty = SimpleDoubleProperty(0.0)
@@ -55,6 +59,9 @@ class MainWindowController {
         canvasWidth.addListener { _ -> updateSnapshot() }
         canvasHeight.addListener { _ -> updateSnapshot() }
         clipping.addListener { obj -> clippingActive.set((obj as SimpleBooleanProperty).get())}
+
+        availableForms.set(FXCollections.observableArrayList(BasicForm.values().asList()))
+        selectedForm.set(availableForms.firstOrNull())
     }
 
     // endregion
@@ -90,7 +97,7 @@ class MainWindowController {
     // region UpdateMainWindow
 
     fun updateWindowTitleWithCoordinates(window: Stage, event: MouseEvent) {
-        val point = "(${event.x}, ${event.y})"
+        val point = "(${event.x.toInt()}, ${event.y.toInt()})"
         window.title = "$title $point"
     }
 
@@ -100,30 +107,48 @@ class MainWindowController {
 
     // endregion
 
+    // region FileManager
+
+    fun openFigureFromFile(stage: Stage) {
+        fileChooser.apply {
+            for (extension in FileHelper.extensions) {
+                extensionFilters.add(FileChooser.ExtensionFilter("${extension.key} (*.${extension.value})", "*.${extension.value}"))
+            }
+        }.showOpenDialog(stage)?.let {
+            try {
+                fileChooser.initialDirectory = it.parentFile
+                FileHelper().readFile(it)
+            }
+            catch (e: Exception) {
+                popupDialog(Constants.OPEN_FILE_ERROR, "Não foi possível abrir o arquivo")
+            }
+        }
+    }
+
+    fun saveFigureOnFile(stage: Stage) {
+        fileChooser.apply {
+            for (extension in FileHelper.extensions) {
+                extensionFilters.add(FileChooser.ExtensionFilter("${extension.key} (*.${extension.value})", "*.${extension.value}"))
+            }
+        }.showSaveDialog(stage)?.let {
+            try {
+                fileChooser.initialDirectory = it.parentFile
+                FileHelper().writeFile(it)
+            }
+            catch (e: Exception) {
+                popupDialog(Constants.SAVE_FILE_ERROR, "Não foi possível salvar o arquivo")
+            }
+        }
+    }
+
+    // endregion
+
     // region SelectForm
 
-    fun selectPoint() {
-        actualForm = BasicForm.POINT
-        cleanResetDraw()
-    }
+    fun selectForm(form: BasicForm) {
+        actualForm = form
+        selectedForm.set(form)
 
-    fun selectLine() {
-        actualForm = BasicForm.LINE
-        cleanResetDraw()
-    }
-
-    fun selectCircle() {
-        actualForm = BasicForm.CIRCLE
-        cleanResetDraw()
-    }
-
-    fun selectRectangle() {
-        actualForm = BasicForm.RECTANGLE
-        cleanResetDraw()
-    }
-
-    fun selectPolygon() {
-        actualForm = BasicForm.POLYGON
         cleanResetDraw()
     }
 
@@ -142,6 +167,18 @@ class MainWindowController {
             else {
                 popupDialog(Constants.INVALID_INPUT, "Valor inserido \"$input\" é inválido para quantidade de divisões")
             }
+        }
+    }
+
+    fun updateAvailableForms(forms: List<BasicForm>) {
+        availableForms.clear()
+        availableForms.addAll(forms)
+
+        if (!forms.contains(actualForm)) {
+            selectedForm.set(BasicForm.LINE)
+        }
+        else {
+            selectedForm.set(actualForm)
         }
     }
 
@@ -176,6 +213,7 @@ class MainWindowController {
             clearCanvas(context)
             FormStorage.redraw(context)
         }
+
         resetDraw()
     }
 
@@ -193,6 +231,17 @@ class MainWindowController {
             clippingMax.set(null)
             cleanResetDraw()
             clearCanvas(supportCanvas.graphicsContext2D)
+
+
+            updateAvailableForms(BasicForm.values().asList())
+        }
+        else {
+            val forms = listOf(
+                    BasicForm.POINT,
+                    BasicForm.LINE,
+                    BasicForm.CIRCLE
+            )
+            updateAvailableForms(forms)
         }
     }
 

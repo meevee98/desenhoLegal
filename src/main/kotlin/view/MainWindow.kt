@@ -11,6 +11,7 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.stage.Stage
 import model.constants.Constants
+import model.enums.BasicForm
 
 class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
@@ -42,6 +43,11 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     CornerRadii.EMPTY,
                     BorderWidths(0.0, 0.0, 0.0, 2.0)
             ))
+            background = Background(BackgroundFill(
+                    Constants.DEFAULT_BACKGROUND_COLOR,
+                    CornerRadii.EMPTY,
+                    Insets.EMPTY
+            ))
             children.addAll(canvas, supportCanvas)
             supportCanvas.toFront()
         }
@@ -51,25 +57,31 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         // Eventos de mouse
         handleMouseEvents(canvasPane, stage, context)
 
-        val miniWindow = ImageView().apply {
-            fitWidth = 200.0
-            fitHeight = 200.0
-            imageProperty().bind(controller.canvasSnapshot)
-            isPreserveRatio = true
+        val miniWindow = BorderPane().apply {
+            setPrefSize(200.0, 200.0)
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_SEPARATOR_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(2.0)
+            ))
+
+
+            center = ImageView().apply {
+                fitWidth = 200.0
+                fitHeight = 200.0
+                imageProperty().bind(controller.canvasSnapshot)
+                isPreserveRatio = true
+            }
         }
 
-        val menuBar = MenuBar().apply {
-            menus.addAll(
-                    Menu("Salvar")
-            )
-        }
+        val menuBar = includeMenu(stage)
 
         // Painel para os componentes
         val pane = GridPane().apply {
             rowConstraints.addAll(
                     RowConstraints(),
                     RowConstraints().apply {
-
                         vgrow = Priority.ALWAYS
                     },
                     RowConstraints()
@@ -92,6 +104,9 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                 it.maxHeightProperty().bind(rowConstraints[row].maxHeightProperty())
                 it.maxWidthProperty().bind(columnConstraints[column].maxWidthProperty())
             }
+            miniWindow.also {
+                GridPane.setMargin(it, Insets(0.0, 0.0, controller.panePadding, controller.panePadding))
+            }
 
 
             add(menuBar, 0, 0, 2, 1)
@@ -99,7 +114,6 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
         // cria e insere cena
         val scene = Scene(pane)
-        setShortcuts(scene, context)
         controller.bindCanvasSize(scene)
 
         // define e inicia o stage
@@ -112,6 +126,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             height = 700.0
 
             this.scene = scene
+            setShortcuts(this, context)
             show()
         }
     }
@@ -135,30 +150,14 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             minWidth = 200.0
             children.addAll(
                     colors,
-                    Button().apply { // desenhar pontos
-                        text = "Ponto"
-                        setOnAction { controller.selectPoint() }
-                    },
-                    Button().apply { // desenhar linhas
-                        text = "Reta"
-                        setOnAction { controller.selectLine() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Círculo"
-                        setOnAction { controller.selectCircle() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Retângulo"
-                        disableProperty().bind(controller.clipping)
-                        setOnAction { controller.selectRectangle() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Polígono"
-                        disableProperty().bind(controller.clipping)
-                        setOnAction { controller.selectPolygon() }
+                    ComboBox<BasicForm>().apply {
+                        itemsProperty().bind(controller.availableForms)
+                        valueProperty().bindBidirectional(controller.selectedForm)
+
+                        setOnAction { value?.let { controller.selectForm(it) } }
                     },
                     Button().apply { // desenhar forma com linhas
-                        text = "Outras Formas"
+                        text = "Curva com retas"
                         disableProperty().bind(controller.clippingActive)
                         setOnAction { controller.selectLineForm(context) }
                     },
@@ -183,20 +182,39 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         }
     }
 
+    private fun includeMenu(stage: Stage): MenuBar {
+        return MenuBar().apply {
+            menus.addAll(
+                    Menu("Arquivo").apply {
+                        items.addAll(
+                                MenuItem("Abrir (Ctrl + O)").apply {
+                                    setOnAction { controller.openFigureFromFile(stage) }
+                                },
+                                MenuItem("Salvar (Ctrl + S)").apply {
+                                    setOnAction { controller.saveFigureOnFile(stage) }
+                                }
+                        )
+                    }
+            )
+        }
+    }
+
     private fun handleMouseEvents(canvas: Pane, stage: Stage, context: GraphicsContext) {
         canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
         canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
         canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
     }
 
-    private fun setShortcuts(scene: Scene, context: GraphicsContext) {
+    private fun setShortcuts(stage: Stage, context: GraphicsContext) {
         val shortcuts = mapOf(
+                KeyCombination.valueOf("Ctrl+O") to Runnable { controller.openFigureFromFile(stage) },
+                KeyCombination.valueOf("Ctrl+S") to Runnable { controller.saveFigureOnFile(stage) },
                 KeyCombination.valueOf("Ctrl+Z") to Runnable { controller.undo(context) },
                 KeyCombination.valueOf("Ctrl+Y") to Runnable { controller.redo(context) },
                 KeyCombination.valueOf("Ctrl+Shift+Z") to Runnable { controller.redo(context) },
                 KeyCombination.valueOf("Ctrl+Delete") to Runnable { controller.clear(context) }
         )
 
-        scene.accelerators.putAll(shortcuts)
+        stage.scene.accelerators.putAll(shortcuts)
     }
 }
