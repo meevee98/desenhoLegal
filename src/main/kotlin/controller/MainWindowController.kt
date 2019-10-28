@@ -21,7 +21,6 @@ import model.constants.Constants
 import model.enums.BasicForm
 import model.math.Point
 import util.FileHelper
-import util.JsonHelper
 import kotlin.math.max
 import kotlin.math.min
 
@@ -32,7 +31,11 @@ class MainWindowController {
     var drawDiameter: Int = Constants.DEFAULT_DRAW_DIAMETER
     val panePadding: Double = Constants.DEFAULT_PANE_PADDING
 
-    val fileChooser = FileChooser()
+    val fileChooser = FileChooser().apply {
+        for (extension in FileHelper.extensions) {
+            extensionFilters.add(FileChooser.ExtensionFilter("${extension.key} (*.${extension.value})", "*.${extension.value}"))
+        }
+    }
 
     var clipping = SimpleBooleanProperty(false)
     var clippingActive = SimpleBooleanProperty(false)
@@ -111,14 +114,15 @@ class MainWindowController {
     // region FileManager
 
     fun openFigureFromFile(stage: Stage) {
-        fileChooser.apply {
-            for (extension in FileHelper.extensions) {
-                extensionFilters.add(FileChooser.ExtensionFilter("${extension.key} (*.${extension.value})", "*.${extension.value}"))
-            }
-        }.showOpenDialog(stage)?.let {
+        fileChooser.showOpenDialog(stage)?.let {
             try {
                 fileChooser.initialDirectory = it.parentFile
-                FileHelper().readFile(it)
+                FileHelper().readFile(
+                        it,
+                        Point(diffWidth.get(), diffHeight.get()),
+                        Point(canvasWidth.get(), canvasHeight.get())
+                )
+                clearCanvas(mainCanvas.graphicsContext2D)
             }
             catch (e: Exception) {
                 popupDialog(Constants.OPEN_FILE_ERROR, "Não foi possível abrir o arquivo")
@@ -127,14 +131,14 @@ class MainWindowController {
     }
 
     fun saveFigureOnFile(stage: Stage) {
-        fileChooser.apply {
-            for (extension in FileHelper.extensions) {
-                extensionFilters.add(FileChooser.ExtensionFilter("${extension.key} (*.${extension.value})", "*.${extension.value}"))
-            }
-        }.showSaveDialog(stage)?.let {
+        fileChooser.showSaveDialog(stage)?.let {
             try {
                 fileChooser.initialDirectory = it.parentFile
-                FileHelper().writeFile(it)
+                FileHelper().writeFile(
+                        it,
+                        Point(diffWidth.get(), diffHeight.get()),
+                        Point(canvasWidth.get(), canvasHeight.get())
+                )
             }
             catch (e: Exception) {
                 popupDialog(Constants.SAVE_FILE_ERROR, "Não foi possível salvar o arquivo")
@@ -375,23 +379,6 @@ class MainWindowController {
             contentText = dialogContent
             showAndWait()
         }
-    }
-
-    fun openJson() {
-        val figure = JsonHelper().readFigureFromJson(
-                Point(diffWidth.get(), diffHeight.get()),
-                Point(canvasWidth.get(), canvasWidth.get())
-        )
-        FormStorage.draw(figure, mainCanvas.graphicsContext2D)
-        updateSnapshot()
-    }
-
-    fun saveJson() {
-        JsonHelper().saveFigureAsJson(
-                FormStorage.forms,
-                Point(diffWidth.get(), diffHeight.get()),
-                Point(canvasWidth.get(), canvasWidth.get())
-        )
     }
 
     // endregion

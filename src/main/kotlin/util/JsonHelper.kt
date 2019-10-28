@@ -5,36 +5,39 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import javafx.scene.paint.Color
 import model.graphic.*
 import model.math.Point
+import java.io.File
 
 class JsonHelper {
-    fun saveFigureAsJson(forms: List<Form>, min: Point, max: Point) {
+    fun saveFigureAsJson(forms: List<Form>, file: File, min: Point, max: Point) {
         val normalizedForms = forms.map { it.normalize(min, max) }
         val lines = normalizedForms.filterIsInstance<GraphicLine>()
         val circles = normalizedForms.filterIsInstance<GraphicCircle>()
-        val rectangle = normalizedForms.filterIsInstance<GraphicRectangle>()
+        val rectangles = normalizedForms.filterIsInstance<GraphicRectangle>()
+        val polygons = normalizedForms.filterIsInstance<GraphicPolygon>()
 
         val mapper = ObjectMapper()
 
         val figureNode = mapper.createObjectNode()
         figureNode.set("reta", contructLineNode(lines))
         figureNode.set("circulo", constructCircleNode(circles))
-        figureNode.set("retangulo", constructRectangleNode(rectangle))
+        figureNode.set("retangulo", constructRectangleNode(rectangles))
+        figureNode.set("poligono", constructPolygonNode(polygons))
 
         val root = mapper.createObjectNode()
         root.set("figura", figureNode)
 
         println(mapper.writeValueAsString(root))
+        mapper.writer().writeValue(file, root)
     }
 
-    fun readFigureFromJson(min: Point, max: Point): List<Form> {
-        val json = "{\"figura\":{\"reta\":[{\"p1\":{\"x\":0.18277945619335348,\"y\":0.2764350453172205},\"p2\":{\"x\":0.4486404833836858,\"y\":0.5015105740181269},\"cor\":{\"r\":0,\"g\":0,\"b\":0}},{\"p1\":{\"x\":0.18882175226586104,\"y\":0.7643504531722054},\"p2\":{\"x\":0.4743202416918429,\"y\":0.16163141993957703},\"cor\":{\"r\":0,\"g\":0,\"b\":0}}],\"circulo\":[{\"ponto\":{\"x\":0.7447129909365559,\"y\":0.49395770392749244},\"raio\":0.37108811874408015,\"cor\":{\"r\":0,\"g\":0,\"b\":0}}],\"retangulo\":[{\"p1\":{\"x\":0.012084592145015106,\"y\":0.17673716012084592},\"p2\":{\"x\":0.3323262839879154,\"y\":0.6586102719033232},\"cor\":{\"r\":0,\"g\":0,\"b\":0}}]}}"
+    fun readFigureFromJson(file: File, min: Point, max: Point): List<Form> {
         val forms = mutableListOf<Form>()
 
         val mapper = ObjectMapper()
-        val tree = mapper.readTree(json)
+        val tree = mapper.readTree(file)
 
         tree?.let { root ->
-            root["figura"]?.let { figure ->
+            root["figura"]?.also { figure ->
                 figure["reta"]?.run {
                     val lines = readLineNode(this)
                     forms.addAll(lines)
@@ -46,6 +49,10 @@ class JsonHelper {
                 figure["retangulo"]?.run {
                     val rectangles = readRectangleNode(this)
                     forms.addAll(rectangles)
+                }
+                figure["poligono"]?.run {
+                    val polygons = readPolygonNode(this)
+                    forms.addAll(polygons)
                 }
             }
         }
@@ -109,6 +116,64 @@ class JsonHelper {
         }
 
         return circlesNode
+    }
+
+    private fun constructRectangleNode(rectangles: List<GraphicRectangle>): JsonNode {
+        val mapper = ObjectMapper()
+        val rectanglesNode = mapper.createArrayNode()
+
+        for (rectangle in rectangles) {
+            val p1 = mapper.createObjectNode()
+            p1.put("x", rectangle.p1.x)
+            p1.put("y", rectangle.p1.y)
+
+            val p2 = mapper.createObjectNode()
+            p2.put("x", rectangle.p2.x)
+            p2.put("y", rectangle.p2.y)
+
+            val color = mapper.createObjectNode()
+            color.put("r", (255 * rectangle.color.red).toInt())
+            color.put("g", (255 * rectangle.color.green).toInt())
+            color.put("b", (255 * rectangle.color.blue).toInt())
+
+            val rectangleNode = mapper.createObjectNode()
+            rectangleNode.set("p1", p1)
+            rectangleNode.set("p2", p2)
+            rectangleNode.set("cor", color)
+
+            rectanglesNode.add(rectangleNode)
+        }
+
+        return rectanglesNode
+    }
+
+    private fun constructPolygonNode(polygons: List<GraphicPolygon>): JsonNode {
+        val mapper = ObjectMapper()
+        val polygonsNode = mapper.createArrayNode()
+
+        for (polygon in polygons) {
+            val points = mapper.createArrayNode()
+            for (point in polygon.points) {
+                val p = mapper.createObjectNode()
+                p.put("x", point.x)
+                p.put("y", point.y)
+
+                points.add(p)
+            }
+
+            val color = mapper.createObjectNode()
+            color.put("r", (255 * polygon.color.red).toInt())
+            color.put("g", (255 * polygon.color.green).toInt())
+            color.put("b", (255 * polygon.color.blue).toInt())
+
+            val polygonNode = mapper.createObjectNode()
+            polygonNode.set("ponto", points)
+            polygonNode.set("cor", color)
+
+            polygonsNode.add(polygonNode)
+        }
+
+        return polygonsNode
     }
 
     private fun readLineNode(linesNode: JsonNode): List<Form> {
@@ -204,32 +269,31 @@ class JsonHelper {
         return rectangles
     }
 
-    private fun constructRectangleNode(rectangles: List<GraphicRectangle>): JsonNode {
-        val mapper = ObjectMapper()
-        val rectanglesNode = mapper.createArrayNode()
+    private fun readPolygonNode(polygonsNode: JsonNode): List<Form> {
+        val polygons = mutableListOf<GraphicPolygon>()
 
-        for (rectangle in rectangles){
-            val p1 = mapper.createObjectNode()
-            p1.put("x", rectangle.p1.x)
-            p1.put("y", rectangle.p1.y)
+        for (node in polygonsNode) {
+            val points = mutableListOf<GraphicPoint>()
+            node["ponto"]?.let { pointsNode ->
+                for (point in pointsNode) {
+                    val x = point["x"]?.asDouble() ?: 0.0
+                    val y = point["y"]?.asDouble() ?: 0.0
+                    points.add(GraphicPoint(x, y))
+                }
+            }
 
-            val p2 = mapper.createObjectNode()
-            p2.put("x", rectangle.p2.x)
-            p2.put("y", rectangle.p2.y)
+            val color = node["cor"]?.let {
+                val red = (it["r"]?.asInt() ?: 0) / 255.0
+                val green = (it["g"]?.asInt() ?: 0) / 255.0
+                val blue = (it["b"]?.asInt() ?: 0) / 255.0
+                Color(red, green, blue, 1.0)
+            }
 
-            val color = mapper.createObjectNode()
-            color.put("r", (255 * rectangle.color.red).toInt())
-            color.put("g", (255 * rectangle.color.green).toInt())
-            color.put("b", (255 * rectangle.color.blue).toInt())
-
-            val rectangleNode = mapper.createObjectNode()
-            rectangleNode.set("p1", p1)
-            rectangleNode.set("p2", p2)
-            rectangleNode.set("cor", color)
-
-            rectanglesNode.add(rectangleNode)
+            if (points.size > 2) {
+                polygons.add(GraphicPolygon(points, color=color))
+            }
         }
 
-        return rectanglesNode
+        return polygons
     }
 }

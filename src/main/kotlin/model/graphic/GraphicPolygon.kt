@@ -17,6 +17,11 @@ class GraphicPolygon: Form {
         name?.also { this.name = it }
     }
 
+    constructor(points: List<GraphicPoint>, width: Int? = null, color: Color? = null, name: String? = null)
+            : this(width, color, name) {
+        this.points = points.toMutableList()
+    }
+
     fun addPoint(x: Double, y: Double, gc: GraphicsContext) {
         val p1 = GraphicPoint(x, y, color, width)
 
@@ -47,10 +52,27 @@ class GraphicPolygon: Form {
     }
 
     override fun normalize(min: Point, max: Point): GraphicPolygon {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val normalizedPoints = mutableListOf<GraphicPoint>()
+        points.forEach {
+            val x = (it.x - min.x) / (max.x - min.x)
+            val y = (it.y - min.y) / (max.y - min.y)
+
+            normalizedPoints.add(GraphicPoint(x, y))
+        }
+
+        return GraphicPolygon(normalizedPoints, color=color)
     }
 
     override fun convertFromNormalized(min: Point, max: Point) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val pts = mutableListOf<GraphicPoint>()
+
+        points.forEach {
+            val x = it.x * (max.x - min.x) + min.x
+            val y = it.y * (max.y - min.y) + min.y
+
+            pts.add(GraphicPoint(x, y))
+        }
+        points.clear()
+        points.addAll(pts)
     }
 }

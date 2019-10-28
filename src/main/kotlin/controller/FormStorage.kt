@@ -16,12 +16,11 @@ object FormStorage {
         redraw(gc)
     }
 
-    fun draw(figure: List<Form>, gc: GraphicsContext) {
+    fun read(figure: List<Form>) {
         verifyUndoHistory()
         saveOnHistory()
         forms.clear()
         forms.addAll(figure)
-        redraw(gc)
     }
 
     fun clear() {
