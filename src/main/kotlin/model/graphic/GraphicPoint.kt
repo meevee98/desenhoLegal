@@ -56,5 +56,13 @@ class GraphicPoint : Point, Form {
         drawPoint(gc)
     }
 
+    override fun normalize(min: Point, max: Point): GraphicPoint {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     // endregion
 }

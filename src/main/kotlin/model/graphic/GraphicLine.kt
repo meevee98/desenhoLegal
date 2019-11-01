@@ -2,6 +2,7 @@ package model.graphic
 
 import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
+import model.constants.Constants
 import model.enums.Clipping
 import kotlin.math.*
 import model.enums.LineAlgorithm
@@ -11,7 +12,7 @@ import model.math.Point
 class GraphicLine : Line, Form {
     var color: Color = Color.BLACK
     var name = ""
-    var width = 1
+    var width = Constants.DEFAULT_DRAW_DIAMETER
 
     // region CONSTRUCTORS
 
@@ -71,6 +72,25 @@ class GraphicLine : Line, Form {
 
     override fun draw(gc: GraphicsContext) {
         drawLine(gc)
+    }
+
+    override fun normalize(min: Point, max: Point): GraphicLine {
+        val x1 = (p1.x - min.x) / (max.x - min.x)
+        val y1 = (p1.y - min.y) / (max.y - min.y)
+        val x2 = (p2.x - min.x) / (max.x - min.x)
+        val y2 = (p2.y - min.y) / (max.y - min.y)
+
+        return GraphicLine(x1, y1, x2, y2, color=color)
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        val x1 = p1.x * (max.x - min.x) + min.x
+        val y1 = p1.y * (max.y - min.y) + min.y
+        val x2 = p2.x * (max.x - min.x) + min.x
+        val y2 = p2.y * (max.y - min.y) + min.y
+
+        p1 = Point(x1, y1)
+        p2 = Point(x2, y2)
     }
 
     // region DRAW LINE ALGORITHMS

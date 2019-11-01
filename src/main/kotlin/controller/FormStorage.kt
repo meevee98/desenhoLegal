@@ -16,6 +16,13 @@ object FormStorage {
         redraw(gc)
     }
 
+    fun read(figure: List<Form>) {
+        verifyUndoHistory()
+        saveOnHistory()
+        forms.clear()
+        forms.addAll(figure)
+    }
+
     fun clear() {
         verifyUndoHistory()
         saveOnHistory()
@@ -73,4 +80,6 @@ object FormStorage {
             undoHistory.clear()
         }
     }
+
+
 }

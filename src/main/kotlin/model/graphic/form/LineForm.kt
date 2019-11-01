@@ -4,6 +4,7 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 import model.graphic.Form
 import model.graphic.GraphicLine
+import model.math.Point
 
 class LineForm : Form {
     val minX: Double
@@ -53,5 +54,13 @@ class LineForm : Form {
 
     override fun draw(gc: GraphicsContext) {
         lines.forEach { line -> line.draw(gc) }
+    }
+
+    override fun normalize(min: Point, max: Point): LineForm {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
