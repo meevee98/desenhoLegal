@@ -2,17 +2,16 @@ package view
 
 import controller.MainWindowController
 import javafx.geometry.Insets
-import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
-import javafx.scene.control.Button
-import javafx.scene.control.ColorPicker
+import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.stage.Stage
 import model.constants.Constants
+import model.enums.BasicForm
 
 class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
@@ -26,70 +25,96 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             width = Constants.CANVAS_WIDTH
             height = Constants.CANVAS_HEIGHT
         }
+        val supportCanvas = Canvas().apply {
+            width = Constants.CANVAS_WIDTH
+            height = Constants.CANVAS_HEIGHT
+        }
 
         // componente para desenhar graficos
         val context = canvas.graphicsContext2D
 
         // componente para os botões
         val buttons = includeButtons(context)
-        controller.bindWidth(buttons)
-        
-        // Eventos de mouse
-        canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
-        canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
-        canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
 
-        val canvasPane = BorderPane().apply {
+        val canvasPane = Pane().apply {
             border = Border(BorderStroke(
                     Constants.DEFAULT_SEPARATOR_COLOR,
                     BorderStrokeStyle.SOLID,
                     CornerRadii.EMPTY,
-                    BorderWidths(0.0, 0.0, 0.0, 2.0)
-            ))
-            center = canvas
-        }
-        controller.canvasPane = canvasPane
-
-        val miniWindow = ImageView().apply {
-            fitWidth = 200.0
-            fitHeight = 200.0
-            imageProperty().bind(controller.canvasSnapshot)
-            isPreserveRatio = true
-        }
-
-        val gridMenu = GridPane().apply {
-            rowConstraints.add(RowConstraints().apply {
-                vgrow = Priority.ALWAYS
-            })
-            columnConstraints.add(ColumnConstraints().apply {
-                alignment = Pos.BOTTOM_CENTER
-            })
-            add(buttons, 0, 0)
-            add(miniWindow, 0, 1)
-
-        }
-
-        // Painel para os componentes
-        val pane = HBox(Constants.DEFAULT_PANE_PADDING).apply {
-            border = Border(BorderStroke(
-                    Constants.DEFAULT_SEPARATOR_COLOR,
-                    BorderStrokeStyle.SOLID,
-                    CornerRadii.EMPTY,
-                    BorderWidths(2.0)
+                    BorderWidths(0.0, 0.0, 0.0, Constants.DEFAULT_BORDER_WIDTH)
             ))
             background = Background(BackgroundFill(
                     Constants.DEFAULT_BACKGROUND_COLOR,
                     CornerRadii.EMPTY,
                     Insets.EMPTY
             ))
-
-            children.addAll(gridMenu, canvasPane) // posiciona o componente de desenho
+            children.addAll(canvas, supportCanvas)
+            supportCanvas.toFront()
         }
-        controller.bindCanvasSize(pane)
+        controller.mainCanvas = canvas
+        controller.supportCanvas = supportCanvas
+
+        // Eventos de mouse
+        handleMouseEvents(canvasPane, stage, context)
+
+        val miniWindow = BorderPane().apply {
+            setMinSize(200.0, 200.0)
+            setMaxSize(200.0, 200.0)
+            border = Border(BorderStroke(
+                    Constants.DEFAULT_SEPARATOR_COLOR,
+                    BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,
+                    BorderWidths(Constants.DEFAULT_BORDER_WIDTH)
+            ))
+
+            center = ImageView().apply {
+                fitWidth = maxWidth - 2 * Constants.DEFAULT_BORDER_WIDTH
+                fitHeight = maxHeight - 2 * Constants.DEFAULT_BORDER_WIDTH
+                imageProperty().bind(controller.canvasSnapshot)
+                isPreserveRatio = true
+            }
+        }
+
+        val menuBar = includeMenu(stage)
+
+        // Painel para os componentes
+        val pane = GridPane().apply {
+            rowConstraints.addAll(
+                    RowConstraints(),
+                    RowConstraints().apply {
+                        vgrow = Priority.ALWAYS
+                    },
+                    RowConstraints()
+            )
+            columnConstraints.addAll(
+                    ColumnConstraints(),
+                    ColumnConstraints().apply {
+                        hgrow = Priority.ALWAYS
+                    }
+            )
+
+            add(buttons, 0, 1)
+            add(miniWindow, 0, 2)
+            add(canvasPane, 1, 1, 1 , 2)
+            canvasPane.also {
+                val row = GridPane.getRowIndex(it)
+                val column = GridPane.getColumnIndex(it)
+                GridPane.setMargin(it, Insets(0.0, 0.0, 0.0, controller.panePadding))
+
+                it.maxHeightProperty().bind(rowConstraints[row].maxHeightProperty())
+                it.maxWidthProperty().bind(columnConstraints[column].maxWidthProperty())
+            }
+            miniWindow.also {
+                GridPane.setMargin(it, Insets(0.0, 0.0, controller.panePadding, controller.panePadding))
+            }
+
+
+            add(menuBar, 0, 0, 2, 1)
+        }
 
         // cria e insere cena
         val scene = Scene(pane)
-        setShortcuts(scene, context)
+        controller.bindCanvasSize(scene)
 
         // define e inicia o stage
         stage.run {
@@ -98,9 +123,10 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
 
             // define largura e altura da janela
             width = 800.0
-            height = 600.0
+            height = 700.0
 
             this.scene = scene
+            setShortcuts(this, context)
             show()
         }
     }
@@ -124,20 +150,15 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
             minWidth = 200.0
             children.addAll(
                     colors,
-                    Button().apply { // desenhar pontos
-                        text = "Ponto"
-                        setOnAction { controller.selectPoint() }
-                    },
-                    Button().apply { // desenhar linhas
-                        text = "Reta"
-                        setOnAction { controller.selectLine() }
-                    },
-                    Button().apply { // desenhar circulos
-                        text = "Círculo"
-                        setOnAction { controller.selectCircle() }
+                    ComboBox<BasicForm>().apply {
+                        itemsProperty().bind(controller.availableForms)
+                        valueProperty().bindBidirectional(controller.selectedForm)
+
+                        setOnAction { value?.let { controller.selectForm(it) } }
                     },
                     Button().apply { // desenhar forma com linhas
-                        text = "Outras Formas"
+                        text = "Curva com retas"
+                        disableProperty().bind(controller.clippingActive)
                         setOnAction { controller.selectLineForm(context) }
                     },
                     Button().apply { // limpar canvas
@@ -152,23 +173,48 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                         text = "Refazer"
                         setOnAction { controller.redo(context) }
                     },
-                    Button().apply { // clipping do canvas
+                    CheckBox().apply { // clipping do canvas
                         text = "Clip"
-                        isDisable = true
-                        setOnAction { controller.clip(context) }
+                        selectedProperty().bindBidirectional(controller.clipping)
+                        selectedProperty().addListener { _ -> controller.clip() }
                     }
             )
         }
     }
 
-    private fun setShortcuts(scene: Scene, context: GraphicsContext) {
+    private fun includeMenu(stage: Stage): MenuBar {
+        return MenuBar().apply {
+            menus.addAll(
+                    Menu("Arquivo").apply {
+                        items.addAll(
+                                MenuItem("Abrir (Ctrl + O)").apply {
+                                    setOnAction { controller.openFigureFromFile(stage) }
+                                },
+                                MenuItem("Salvar (Ctrl + S)").apply {
+                                    setOnAction { controller.saveFigureOnFile(stage) }
+                                }
+                        )
+                    }
+            )
+        }
+    }
+
+    private fun handleMouseEvents(canvas: Pane, stage: Stage, context: GraphicsContext) {
+        canvas.setOnMouseMoved { event -> controller.updateWindowTitleWithCoordinates(stage, event) }
+        canvas.setOnMouseExited { controller.updateWindowTitleWithoutCoordinates(stage) }
+        canvas.setOnMousePressed { event -> controller.drawForm(context, event) }
+    }
+
+    private fun setShortcuts(stage: Stage, context: GraphicsContext) {
         val shortcuts = mapOf(
+                KeyCombination.valueOf("Ctrl+O") to Runnable { controller.openFigureFromFile(stage) },
+                KeyCombination.valueOf("Ctrl+S") to Runnable { controller.saveFigureOnFile(stage) },
                 KeyCombination.valueOf("Ctrl+Z") to Runnable { controller.undo(context) },
                 KeyCombination.valueOf("Ctrl+Y") to Runnable { controller.redo(context) },
                 KeyCombination.valueOf("Ctrl+Shift+Z") to Runnable { controller.redo(context) },
                 KeyCombination.valueOf("Ctrl+Delete") to Runnable { controller.clear(context) }
         )
 
-        scene.accelerators.putAll(shortcuts)
+        stage.scene.accelerators.putAll(shortcuts)
     }
 }

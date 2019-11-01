@@ -2,15 +2,17 @@ package model.graphic
 
 import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
+import model.constants.Constants
+import model.enums.Clipping
 import kotlin.math.*
 import model.enums.LineAlgorithm
 import model.math.Line
+import model.math.Point
 
 class GraphicLine : Line, Form {
-    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
-    var width = 1
+    var width = Constants.DEFAULT_DRAW_DIAMETER
 
     // region CONSTRUCTORS
 
@@ -21,7 +23,7 @@ class GraphicLine : Line, Form {
         name?.also { this.name = it }
     }
 
-    constructor(x1: Int, y1: Int, x2: Int, y2: Int, width: Int? = null, color: Color? = null, name: String? = null)
+    constructor(x1: Double, y1: Double, x2: Double, y2: Double, width: Int? = null, color: Color? = null, name: String? = null)
             :super(x1, y1, x2, y2) {
         width?.also { this.width = it }
         color?.also { this.color = it }
@@ -42,7 +44,7 @@ class GraphicLine : Line, Form {
             name: String? = null,
             algorithm: LineAlgorithm = LineAlgorithm.EQUATION
         ) {
-            val line = GraphicLine(x1, y1, x2, y2, width, color, name)
+            val line = GraphicLine(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble(), width, color, name)
             line.drawLine(g, algorithm)
         }
 
@@ -55,7 +57,7 @@ class GraphicLine : Line, Form {
             name: String? = null,
             algorithm: LineAlgorithm = LineAlgorithm.EQUATION
         ) {
-            draw(g, x1.toInt(), y1.toInt(), x2.toInt(), y2.toInt(), width, color, name, algorithm)
+            draw(g, x1, y1, x2, y2, width, color, name, algorithm)
         }
     }
 
@@ -70,6 +72,25 @@ class GraphicLine : Line, Form {
 
     override fun draw(gc: GraphicsContext) {
         drawLine(gc)
+    }
+
+    override fun normalize(min: Point, max: Point): GraphicLine {
+        val x1 = (p1.x - min.x) / (max.x - min.x)
+        val y1 = (p1.y - min.y) / (max.y - min.y)
+        val x2 = (p2.x - min.x) / (max.x - min.x)
+        val y2 = (p2.y - min.y) / (max.y - min.y)
+
+        return GraphicLine(x1, y1, x2, y2, color=color)
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        val x1 = p1.x * (max.x - min.x) + min.x
+        val y1 = p1.y * (max.y - min.y) + min.y
+        val x2 = p2.x * (max.x - min.x) + min.x
+        val y2 = p2.y * (max.y - min.y) + min.y
+
+        p1 = Point(x1, y1)
+        p2 = Point(x2, y2)
     }
 
     // region DRAW LINE ALGORITHMS
@@ -94,22 +115,37 @@ class GraphicLine : Line, Form {
 
             for (x in minX..maxX) {
                 GraphicPoint(
-                    x.toDouble(),
-                    Line.calculateY(x.toDouble(), b, m),
+                    x,
+                    calculateY(x.toDouble(), b, m).toInt(),
                     color,
                     width
                 ).drawPoint(g)
             }
         }
-//        deltaX <= deltaY
-        else {
+//        deltaX = deltaY
+        else if (deltaX == 0.0) {
             val minY = min(p1.y, p2.y).toInt()
             val maxY = max(p1.y, p2.y).toInt()
 
             for (y in minY..maxY) {
                 GraphicPoint(
-                    Line.calculateX(y.toDouble(), b, m),
-                    y.toDouble(),
+                    p1.x.toInt(),
+                    y,
+                    color,
+                    width
+                ).drawPoint(g)
+            }
+        }
+//        deltaX < deltaY
+        else {
+            val minY = min(p1.y, p2.y).toInt()
+            val maxY = max(p1.y, p2.y).toInt()
+
+            for (y in minY..maxY) {
+                val x = Line.calculateX(y.toDouble(), b, m)
+                GraphicPoint(
+                    x.toInt(),
+                    y,
                     color,
                     width
                 ).drawPoint(g)
@@ -132,6 +168,62 @@ class GraphicLine : Line, Form {
     private fun drawLineGraphicsContext(g: GraphicsContext) {
         // TODO
     }
-    
+
+    // endregion
+
+    // region CLIP LINE
+
+    fun clip(rectangle: GraphicRectangle): Boolean {
+        val clipper = Clipping()
+        val min = rectangle.getMinPoint()
+        val max = rectangle.getMaxPoint()
+
+        if (clipper.isFullyInside(p1, p2, min, max)) {
+            return true
+        }
+        if (clipper.isFullyOutside(p1, p2, min, max)) {
+            return false
+        }
+
+        p1 = clipPoint(p1, min, max)
+        p2 = clipPoint(p2, min, max)
+
+        if (clipper.isFullyInside(p1, p2, min, max)) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun clipPoint(p: Point, min: Point, max: Point): Point {
+        val clipper = Clipping()
+        var x = p.x
+        var y = p.y
+        val m = calculateSlope()
+
+        if (clipper.isInside(p, min, max)) {
+            return p
+        }
+
+        if (clipper.compare(p, min, max, Clipping.LEFT)) {
+            y += (min.x - x) * m
+            x = min.x
+        }
+        if (clipper.compare(p, min, max, Clipping.RIGHT)) {
+            y += (max.x - x) * m
+            x = max.x
+        }
+        if (clipper.compare(p, min, max, Clipping.TOP) && y < min.y) {
+            x += (min.y - y) / m
+            y = min.y
+        }
+        if (clipper.compare(p, min, max, Clipping.BOTTOM) && y > max.y) {
+            x += (max.y - y) / m
+            y = max.y
+        }
+
+        return Point(x, y)
+    }
+
     // endregion
 }

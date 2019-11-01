@@ -2,15 +2,16 @@ package model.graphic
 
 import javafx.scene.paint.Color
 import javafx.scene.canvas.GraphicsContext
+import model.constants.Constants
 import model.enums.CircleAlgorithm
 import model.math.Circle
+import model.math.Point
 import java.lang.Math.PI
 
 class GraphicCircle : Circle, Form {
-    //TODO: change javafx to TornadoFX
     var color: Color = Color.BLACK
     var name = ""
-    var width = 1
+    var width = Constants.DEFAULT_DRAW_DIAMETER
 
     // region CONSTRUCTORS
 
@@ -73,6 +74,22 @@ class GraphicCircle : Circle, Form {
         drawCircle(gc)
     }
 
+    override fun normalize(min: Point, max: Point): GraphicCircle {
+        val cx = (center.x - min.x) / (max.x - min.x)
+        val cy = (center.y - min.y) / (max.y - min.y)
+        val nRadius = (radius - min.x) / (max.x - min.x)
+
+        return GraphicCircle(GraphicPoint(cx, cy), nRadius, color=color)
+    }
+
+    override fun convertFromNormalized(min: Point, max: Point) {
+        val cx = center.x * (max.x - min.x) + min.x
+        val cy = center.y * (max.y - min.y) + min.y
+
+        radius = radius * (max.x - min.x) + min.x
+        center = Point(cx, cy)
+    }
+
     // region DRAW CIRCLE ALGORITHMS
 
     private fun drawCircleDefault(g: GraphicsContext) {
@@ -81,14 +98,23 @@ class GraphicCircle : Circle, Form {
         for (x in 0..x1) {
             val y = calculateY(x.toDouble(), radius)
 
-            GraphicPoint(center.x + x, center.y + y, color, width).drawPoint(g)
-            GraphicPoint(center.x + y, center.y + x, color, width).drawPoint(g)
-            GraphicPoint(center.x + x, center.y - y, color, width).drawPoint(g)
-            GraphicPoint(center.x + y, center.y - x, color, width).drawPoint(g)
-            GraphicPoint(center.x - x, center.y + y, color, width).drawPoint(g)
-            GraphicPoint(center.x - y, center.y + x, color, width).drawPoint(g)
-            GraphicPoint(center.x - x, center.y - y, color, width).drawPoint(g)
-            GraphicPoint(center.x - y, center.y - x, color, width).drawPoint(g)
+            val cXaddX = (center.x + x).toInt()
+            val cXaddY = (center.x + y).toInt()
+            val cYaddX = (center.y + x).toInt()
+            val cYaddY = (center.y + y).toInt()
+            val cXsubX = (center.x - x).toInt()
+            val cXsubY = (center.x - y).toInt()
+            val cYsubX = (center.y - x).toInt()
+            val cYsubY = (center.y - y).toInt()
+
+            GraphicPoint(cXaddX, cYaddY, color, width).drawPoint(g)
+            GraphicPoint(cXaddY, cYaddX, color, width).drawPoint(g)
+            GraphicPoint(cXaddX, cYsubY, color, width).drawPoint(g)
+            GraphicPoint(cXaddY, cYsubX, color, width).drawPoint(g)
+            GraphicPoint(cXsubX, cYaddY, color, width).drawPoint(g)
+            GraphicPoint(cXsubY, cYaddX, color, width).drawPoint(g)
+            GraphicPoint(cXsubX, cYsubY, color, width).drawPoint(g)
+            GraphicPoint(cXsubY, cYsubX, color, width).drawPoint(g)
         }
 
 
