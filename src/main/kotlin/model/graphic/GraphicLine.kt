@@ -174,48 +174,51 @@ class GraphicLine : Line, Form {
     // region CLIP LINE
 
     fun clip(rectangle: GraphicRectangle): Boolean {
+        val clipper = Clipping()
         val min = rectangle.getMinPoint()
         val max = rectangle.getMaxPoint()
 
-        val codeP1 = Clipping.classify(p1, min.x, min.y, max.x, max.y)
-        val codeP2 = Clipping.classify(p2, min.x, min.y, max.x, max.y)
-
-        if (Clipping.compare(codeP1, codeP2)) {
+        if (clipper.isFullyInside(p1, p2, min, max)) {
+            return true
+        }
+        if (clipper.isFullyOutside(p1, p2, min, max)) {
             return false
         }
-        if ((codeP1 == Clipping.CENTER && codeP2 == Clipping.CENTER)) {
+
+        p1 = clipPoint(p1, min, max)
+        p2 = clipPoint(p2, min, max)
+
+        if (clipper.isFullyInside(p1, p2, min, max)) {
             return true
         }
 
-        p1 = clipPoint(p1, codeP1, min, max)
-        p2 = clipPoint(p2, codeP2, min, max)
-
-        return true
+        return false
     }
 
-    private fun clipPoint(p: Point, code: Int, min: Point, max: Point): Point {
+    private fun clipPoint(p: Point, min: Point, max: Point): Point {
+        val clipper = Clipping()
         var x = p.x
         var y = p.y
         val m = calculateSlope()
 
-        if (code == Clipping.CENTER) {
+        if (clipper.isInside(p, min, max)) {
             return p
         }
 
-        if (Clipping.compare(code, Clipping.LEFT)) {
-            y = y + (min.x - x) * m
+        if (clipper.compare(p, min, max, Clipping.LEFT)) {
+            y += (min.x - x) * m
             x = min.x
         }
-        if (Clipping.compare(code, Clipping.RIGHT)) {
-            y = y + (max.x - x) * m
+        if (clipper.compare(p, min, max, Clipping.RIGHT)) {
+            y += (max.x - x) * m
             x = max.x
         }
-        if (Clipping.compare(code, Clipping.TOP) && y < min.y) {
-            x = x + (min.y - y) / m
+        if (clipper.compare(p, min, max, Clipping.TOP) && y < min.y) {
+            x += (min.y - y) / m
             y = min.y
         }
-        if (Clipping.compare(code, Clipping.BOTTOM) && y > max.y) {
-            x = x + (max.y - y) / m
+        if (clipper.compare(p, min, max, Clipping.BOTTOM) && y > max.y) {
+            x += (max.y - y) / m
             y = max.y
         }
 

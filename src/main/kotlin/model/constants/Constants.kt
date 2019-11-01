@@ -13,6 +13,7 @@ object Constants {
 
     // region Dimension
     const val HAIRLINE = 1
+    const val DEFAULT_BORDER_WIDTH = 2.0
     const val DEFAULT_DRAW_DIAMETER = 4
     const val DEFAULT_PANE_PADDING = 10.0
     const val CANVAS_WIDTH = 3000.0

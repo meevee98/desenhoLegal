@@ -41,7 +41,7 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
                     Constants.DEFAULT_SEPARATOR_COLOR,
                     BorderStrokeStyle.SOLID,
                     CornerRadii.EMPTY,
-                    BorderWidths(0.0, 0.0, 0.0, 2.0)
+                    BorderWidths(0.0, 0.0, 0.0, Constants.DEFAULT_BORDER_WIDTH)
             ))
             background = Background(BackgroundFill(
                     Constants.DEFAULT_BACKGROUND_COLOR,
@@ -58,17 +58,18 @@ class MainWindow(private val controller: MainWindowController, stage: Stage) {
         handleMouseEvents(canvasPane, stage, context)
 
         val miniWindow = BorderPane().apply {
-            setPrefSize(200.0, 200.0)
+            setMinSize(200.0, 200.0)
+            setMaxSize(200.0, 200.0)
             border = Border(BorderStroke(
                     Constants.DEFAULT_SEPARATOR_COLOR,
                     BorderStrokeStyle.SOLID,
                     CornerRadii.EMPTY,
-                    BorderWidths(2.0)
+                    BorderWidths(Constants.DEFAULT_BORDER_WIDTH)
             ))
 
             center = ImageView().apply {
-                fitWidth = 200.0
-                fitHeight = 200.0
+                fitWidth = maxWidth - 2 * Constants.DEFAULT_BORDER_WIDTH
+                fitHeight = maxHeight - 2 * Constants.DEFAULT_BORDER_WIDTH
                 imageProperty().bind(controller.canvasSnapshot)
                 isPreserveRatio = true
             }

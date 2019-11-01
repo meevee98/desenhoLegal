@@ -369,7 +369,7 @@ class MainWindowController {
     private fun isDivisionsAmountValid(integer: String): Boolean {
         // a regra atual é ser > 0 e <= 500
         // esse método toIntOrNull retorna null caso a String não seja um formato de número válido
-        return integer.toIntOrNull() ?: 0 in 1..500
+        return (integer.toIntOrNull() ?: 0) in 1..500
     }
 
     fun popupDialog(dialogTitle: String, dialogContent: String, dialogType: AlertType = AlertType.CONFIRMATION) {
