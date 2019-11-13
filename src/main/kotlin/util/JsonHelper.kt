@@ -18,7 +18,7 @@ class JsonHelper {
         val mapper = ObjectMapper()
 
         val figureNode = mapper.createObjectNode()
-        figureNode.set("reta", contructLineNode(lines))
+        figureNode.set("reta", constructLineNode(lines))
         figureNode.set("circulo", constructCircleNode(circles))
         figureNode.set("retangulo", constructRectangleNode(rectangles))
         figureNode.set("poligono", constructPolygonNode(polygons))
@@ -61,7 +61,7 @@ class JsonHelper {
         return forms
     }
 
-    private fun contructLineNode(lines: List<GraphicLine>): JsonNode{
+    private fun constructLineNode(lines: List<GraphicLine>): JsonNode{
         val mapper = ObjectMapper()
         val linesNode = mapper.createArrayNode()
 
